@@ -97,7 +97,7 @@ async def get_supervisor_image_version(job_name: JobName, version: str):
         ret_val = f'The docker image:version for job name {job_name} has been set to {image_name[job_name] + version}'
     except Exception as e:
         # return a failure message
-        ret_val = f'Exception detected trying to update the image version. Job name {job_name}, version" {version}'
+        ret_val = f'Exception detected trying to update the image version. Job name {job_name}, version: {version}'
 
         # log the exception
         logger.exception(ret_val, e)
