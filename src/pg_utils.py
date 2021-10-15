@@ -52,7 +52,7 @@ class PGUtils:
         except Exception as e:
             self.logger.error(f'Error detected closing cursor or connection. {e}')
 
-    def exec_sql(self, sql_stmt):
+    def exec_sql(self, sql_stmt: str):
         """
         executes a sql statement
 
@@ -79,7 +79,20 @@ class PGUtils:
         except Exception as e:
             self.logger.error(f'Error detected executing SQL: {sql_stmt}. {e}')
 
-    def update_job_image(self, job_name, image):
+    def get_job_defs(self):
+        """
+        gets the supervisor job definitions
+
+        :return:
+        """
+
+        # create the sql
+        sql: str = 'SELECT public.get_supervisor_job_defs_json()'
+
+        # get the data
+        return self.exec_sql(sql)
+
+    def update_job_image(self, job_name: str, image: str):
         """
         updates the image version
 
@@ -90,6 +103,21 @@ class PGUtils:
 
         # create the sql
         sql = f"SELECT public.update_job_image('{job_name}', '{image}')"
+
+        # run the SQL
+        self.exec_sql(sql)
+
+    def update_run_status(self, instance_id: int, uid: str, status: str):
+        """
+        updates the run properties run status to 'new'.
+
+        :param instance_id:
+        :param uid:
+        :return:
+        """
+
+        # create the sql
+        sql = f"SELECT public.set_config_item({instance_id}, '{uid}', 'supervisor_job_status', '{status}')"
 
         # run the SQL
         self.exec_sql(sql)
