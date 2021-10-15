@@ -113,6 +113,7 @@ class PGUtils:
 
         :param instance_id:
         :param uid:
+        :param status
         :return:
         """
 
