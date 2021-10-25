@@ -12,6 +12,9 @@ LABEL maintainer="powen@renci.org"
 # install basic tools
 RUN apt-get update
 
+# create log level env param (debug=10, info=20)
+ENV LOG_LEVEL 20
+
 # make a directory for the repo
 RUN mkdir /repo
 
