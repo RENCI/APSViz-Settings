@@ -116,7 +116,7 @@ async def set_the_supervisor_image_version(job_name: JobName, version: str):
         status_code = 500
 
     # return to the caller
-    return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/text")
+    return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
 
 
 # sets the run.properties run status to 'new' for a job
@@ -156,7 +156,7 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
         status_code = 500
 
     # return to the caller
-    return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/text")
+    return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
 
 
 @APP.get('/get_job_defs', status_code=200)
