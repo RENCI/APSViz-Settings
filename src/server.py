@@ -2,6 +2,7 @@
 import os
 import logging
 import json
+import re
 
 from common.logging import LoggingUtil
 from enum import Enum
@@ -80,10 +81,10 @@ image_name: dict = {
 @APP.put('/job_name/{job_name}/image_version/{version}', status_code=200)
 async def set_the_supervisor_image_version(job_name: JobName, version: str):
     """
-    Updates the jobs image version.
+    Updates a job's image version label in the supervisor job run configuration.
 
     Notes:
-     - the resultant version identifier must match what has been uploaded to docker hub
+     - The version label must match what has been uploaded to docker hub
 
     :param job_name:
     :param version:
@@ -93,19 +94,32 @@ async def set_the_supervisor_image_version(job_name: JobName, version: str):
     status_code = 200
 
     try:
+        # create a regex pattern for the version number
+        pattern = re.compile(r"([v]\d\.+\d\.+\d)")
+
         # insure that the input params are legit
+        if pattern.search(version):
+            # make sure the underscores end with a hyphen
+            job_name = JobName(job_name).value + '-'
 
-        # make sure the underscores end with a hyphen
-        job_name = JobName(job_name).value + '-'
+            # create the postgres access object
+            pg_db = PGUtils()
 
-        # create the postgres access object
-        pg_db = PGUtils()
+            # try to make the update
+            pg_db.update_job_image(job_name, image_name[job_name] + version)
 
-        # try to make the update
-        pg_db.update_job_image(job_name, image_name[job_name] + version)
+            # return a success message
+            ret_val = f'The docker image:version for job name {job_name} has been set to {image_name[job_name] + version}'
+        else:
+            # return a success message
+            ret_val = f'Error: The version {version} is invalid. Please use a value in the form of v<int>.<int>.<int>'
 
-        # return a success message
-        ret_val = f'The docker image:version for job name {job_name} has been set to {image_name[job_name] + version}'
+            # log the error
+            logger.error(ret_val)
+
+            # set the status to a bad request
+            status_code = 400
+
     except Exception as e:
         # return a failure message
         ret_val = f'Exception detected trying to update the image version. Job name {job_name}, version: {version}'
@@ -133,28 +147,38 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
     :param status:
     :return:
     """
-
     # init the returned html status code
     status_code = 200
 
-    try:
-        # create the postgres access object
-        pg_db = PGUtils()
+    # is this a valid instance id
+    if instance_id > 0:
+        try:
+            # create the postgres access object
+            pg_db = PGUtils()
 
-        # try to make the update
-        pg_db.update_run_status(instance_id, uid, status)
+            # try to make the update
+            pg_db.update_run_status(instance_id, uid, status)
 
-        # return a success message
-        ret_val = f'The status of run {instance_id}/{uid} has been set to {status}'
-    except Exception as e:
+            # return a success message
+            ret_val = f'The status of run {instance_id}/{uid} has been set to {status}'
+        except Exception as e:
+            # return a failure message
+            ret_val = f'Exception detected trying to update run {instance_id}/{uid} to {status}'
+
+            # log the exception
+            logger.exception(ret_val, e)
+
+            # set the status to a server error
+            status_code = 500
+    else:
         # return a failure message
-        ret_val = f'Exception detected trying to update run {instance_id}/{uid} to {status}'
+        ret_val = f'Error: The instance if {instance_id} is invalid. An instance must be a non-zero integer.'
 
-        # log the exception
-        logger.exception(ret_val, e)
+        # log the error
+        logger.error(ret_val)
 
-        # set the status to a server error
-        status_code = 500
+        # set the status to a bad request
+        status_code = 400
 
     # return to the caller
     return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
