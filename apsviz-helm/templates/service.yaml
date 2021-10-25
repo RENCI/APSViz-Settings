@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "apsviz-settings.fullname" . }}
+  labels:
+    {{- include "apsviz-settings.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.containerPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "apsviz-settings.selectorLabels" . | nindent 4 }}
