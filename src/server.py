@@ -64,16 +64,16 @@ class RunStatus(str, Enum):
 
 # declare the
 image_name: dict = {
-    'hazus-': 'renciorg/adras:v',
-    'hazus-singleton-': 'renciorg/adras:v',
-    'obs-mod-supp-job-': 'renciorg/adcirc_supp:v',
-    'run-geo-tiff-job-': 'renciorg/adcirc2mbtiles:v',
-    'compute-mbtiles-job-0-10-': 'renciorg/adcirc2mbtiles:v',
-    'compute-mbtiles-job-11-': 'renciorg/adcirc2mbtiles:v',
-    'compute-mbtiles-job-12-': 'renciorg/adcirc2mbtiles:v',
-    'staging-': 'renciorg/stagedata:v',
-    'final-staging-job-': 'renciorg/stagedata:v',
-    'load-geo-server-job-': 'renciorg/load_geoserver:v'}
+    'hazus-': 'renciorg/adras:',
+    'hazus-singleton-': 'renciorg/adras:',
+    'obs-mod-supp-job-': 'renciorg/adcirc_supp:',
+    'run-geo-tiff-job-': 'renciorg/adcirc2mbtiles:',
+    'compute-mbtiles-job-0-10-': 'renciorg/adcirc2mbtiles:',
+    'compute-mbtiles-job-11-': 'renciorg/adcirc2mbtiles:',
+    'compute-mbtiles-job-12-': 'renciorg/adcirc2mbtiles:',
+    'staging-': 'renciorg/stagedata:',
+    'final-staging-job-': 'renciorg/stagedata:',
+    'load-geo-server-job-': 'renciorg/load_geoserver:'}
 
 
 # updates the image version for a job
@@ -82,7 +82,8 @@ async def set_the_supervisor_image_version(job_name: JobName, version: str):
     """
     Updates the jobs image version.
 
-    Note that the leading "v" is prefixed to the version automatically.
+    Notes:
+     - the resultant version identifier must match what has been uploaded to docker hub
 
     :param job_name:
     :param version:
@@ -94,7 +95,7 @@ async def set_the_supervisor_image_version(job_name: JobName, version: str):
     try:
         # insure that the input params are legit
 
-        # make sure the underscores are hyphens
+        # make sure the underscores end with a hyphen
         job_name = JobName(job_name).value + '-'
 
         # create the postgres access object
