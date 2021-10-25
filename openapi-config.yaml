@@ -3,9 +3,9 @@ contact:
   name: Phil Owen
   x-id: https://github.com/phillipsowen
   x-role: responsible developer
-description: ''
+description: 'Allows for the altering of the APSVIZ supervisor app'
 servers:
 - description: Default server
-  url: https://TBD
+  url: https://apsviz-settings.apps.renci.org
 termsOfService: http://robokop.renci.org:7055/tos?service_long=APSVIZ&provider_long=RENCI
 title: APSVIZ Settings
