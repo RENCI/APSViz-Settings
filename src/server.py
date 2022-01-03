@@ -1,27 +1,28 @@
 """APSVIZ settings server."""
-import os
-import logging
 import json
+import logging
+import os
 import re
-
-from common.logging import LoggingUtil
 from enum import Enum
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+
+from common.logging import LoggingUtil
 from src.pg_utils import PGUtils
 
 # get the log level and directory from the environment.
-# level comes from the container dockerfile, level and path both come from the k8s secrets
+# level comes from the container dockerfile, path comes from the k8s secrets
 log_level: int = int(os.getenv('LOG_LEVEL', logging.INFO))
-log_path: str = os.getenv('LOG_PATH', os.path.dirname(__file__))
+log_path: str = os.getenv('LOG_PATH', os.path.join(os.path.dirname(__file__), 'logs'))
 
 # create the dir if it does not exist
 if not os.path.exists(log_path):
     os.mkdir(log_path)
 
 # create a logger
-logger = LoggingUtil.init_logging("APSVIZ.Settings.pg_utils", level=log_level, line_format='medium', log_file_path=log_path)
+logger = LoggingUtil.init_logging("APSVIZ.Settings", level=log_level, line_format='medium', log_file_path=log_path)
 
 # set the app version
 APP_VERSION = '0.0.1'
@@ -75,6 +76,56 @@ image_name: dict = {
     'staging-': 'renciorg/stagedata:',
     'final-staging-job-': 'renciorg/stagedata:',
     'load-geo-server-job-': 'renciorg/load_geoserver:'}
+
+
+def get_file_list():
+    """
+    Gets all the log file path/names
+
+    :return:
+    """
+    # create a regex
+    rx = re.compile(r'\.(log)')
+
+    # init the return
+    ret_val = {}
+
+    # go through the root and sub-dirs to find the log files
+    for path, dnames, fnames in os.walk(log_path):
+        # for each name in that path
+        for name in fnames:
+            # is it a log file
+            if rx.search(name):
+                # save the file
+                ret_val.update({name: os.path.join(path, name)})
+
+    # return the list to the caller
+    return ret_val
+
+
+@APP.get("/get_log_file_list")
+async def get_the_log_file_list():
+    """
+    Gets the log file list. each of these entries could be used in the get_log_file endpoint
+
+    :return:
+    """
+
+    # return the list to the caller in JSON format
+    return JSONResponse(content={'Response': get_file_list()}, status_code=200, media_type="application/json")
+
+
+@APP.get("/get_log_file/{log_file_path}")
+async def get_the_log_file(log_file_path: str):
+    """
+    Gets the log file specified. This method expects the full file path.
+
+    :param log_file_path:
+    :return:
+    """
+
+    # return the file to the caller
+    return FileResponse(path=log_file_path, filename=os.path.basename(log_file_path), media_type='text/plain') # , filename=log_file.name
 
 
 # updates the image version for a job
