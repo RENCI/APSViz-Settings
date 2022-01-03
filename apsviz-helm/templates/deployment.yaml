@@ -53,6 +53,16 @@ spec:
               secretKeyRef:
                 name: {{ $store_name }}
                 key: {{ .Values.database.db_password }}
+
+          - name: LOG_PATH
+            valueFrom:
+              secretKeyRef:
+                name: eds-keys
+                key: log-path
+
+          volumeMounts:
+            - name: eds-data-vol
+              mountPath: {{ .Values.data.data_mount_path }}
           command:
             - 'uvicorn'
           args:
@@ -69,6 +79,10 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: eds-data-vol
+          persistentVolumeClaim:
+            claimName: eds-pvc
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -81,3 +95,14 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: eds-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
