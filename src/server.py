@@ -42,29 +42,7 @@ APP.add_middleware(
     allow_headers=["*"],
 )
 
-
-# declare the
-class JobName(str, Enum):
-    hazus = 'hazus'
-    hazus_singleton = 'hazus-singleton'
-    obs_mod_supp_job = 'obs-mod-supp-job'
-    run_geo_tiff_job = 'run-geo-tiff-job'
-    compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
-    compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
-    compute_mbtiles_job_12 = 'compute-mbtiles-job-12'
-    staging = 'staging'
-    final_staging_job = 'final-staging-job'
-    load_geo_server_job = 'load-geo-server-job'
-
-
-class RunStatus(str, Enum):
-    hazus = 'hazus'
-    new = 'new'
-    do_not_rerun = 'do not rerun'
-    debug = 'debug'
-
-
-# declare the
+# declare the component image names
 image_name: dict = {
     'hazus-': 'renciorg/adras:',
     'hazus-singleton-': 'renciorg/adras:',
@@ -78,7 +56,29 @@ image_name: dict = {
     'load-geo-server-job-': 'renciorg/load_geoserver:'}
 
 
-def get_file_list():
+# declare the job names
+class JobName(str, Enum):
+    hazus = 'hazus'
+    hazus_singleton = 'hazus-singleton'
+    obs_mod_supp_job = 'obs-mod-supp-job'
+    run_geo_tiff_job = 'run-geo-tiff-job'
+    compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
+    compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
+    compute_mbtiles_job_12 = 'compute-mbtiles-job-12'
+    staging = 'staging'
+    final_staging_job = 'final-staging-job'
+    load_geo_server_job = 'load-geo-server-job'
+
+
+# declare the run status types
+class RunStatus(str, Enum):
+    hazus = 'hazus'
+    new = 'new'
+    do_not_rerun = 'do not rerun'
+    debug = 'debug'
+
+
+def get_log_file_list():
     """
     Gets all the log file path/names
 
@@ -173,7 +173,7 @@ async def get_the_log_file_list():
     """
 
     # return the list to the caller in JSON format
-    return JSONResponse(content={'Response': get_file_list()}, status_code=200, media_type="application/json")
+    return JSONResponse(content={'Response': get_log_file_list()}, status_code=200, media_type="application/json")
 
 
 @APP.get("/get_run_list", status_code=200)
