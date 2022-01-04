@@ -107,8 +107,8 @@ def get_file_list():
                 url = f'https://apsviz-settings.apps.renci.org/get_log_file/?log_file_path={file_path}'
 
                 # save the data in a dict
-                ret_val.update({f'{name}_{counter}': {'file_path': file_path, 'url': {url}}})
-                logger.info(f'get_file_list(): url: {url}')
+                ret_val.update({f'{name}_{counter}': {'file_path': file_path, 'url': f'{url}'}})
+                logger.debug(f'get_file_list(): url: {url}')
 
     # return the list to the caller
     return ret_val
