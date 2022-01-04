@@ -154,6 +154,28 @@ async def display_job_definitions() -> json:
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
 
+@APP.get("/get_log_file/")
+async def get_the_log_file(log_file_path: str = Query('log_file_path')):
+    """
+    Gets the log file specified. This method expects the full file path.
+
+    """
+
+    # return the file to the caller
+    return FileResponse(path=log_file_path, filename=os.path.basename(log_file_path), media_type='text/plain')
+
+
+@APP.get("/get_log_file_list")
+async def get_the_log_file_list():
+    """
+    Gets the log file list. each of these entries could be used in the get_log_file endpoint
+
+    """
+
+    # return the list to the caller in JSON format
+    return JSONResponse(content={'Response': get_file_list()}, status_code=200, media_type="application/json")
+
+
 @APP.get("/get_run_list", status_code=200)
 async def get_the_run_list():
     """
@@ -183,28 +205,6 @@ async def get_the_run_list():
 
     # return to the caller
     return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
-
-
-@APP.get("/get_log_file_list")
-async def get_the_log_file_list():
-    """
-    Gets the log file list. each of these entries could be used in the get_log_file endpoint
-
-    """
-
-    # return the list to the caller in JSON format
-    return JSONResponse(content={'Response': get_file_list()}, status_code=200, media_type="application/json")
-
-
-@APP.get("/get_log_file/")
-async def get_the_log_file(log_file_path: str = Query('log_file_path')):
-    """
-    Gets the log file specified. This method expects the full file path.
-
-    """
-
-    # return the file to the caller
-    return FileResponse(path=log_file_path, filename=os.path.basename(log_file_path), media_type='text/plain')
 
 
 # updates the image version for a job
