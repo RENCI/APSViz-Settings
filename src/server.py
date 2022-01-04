@@ -113,13 +113,41 @@ def get_file_list():
     # return the list to the caller
     return ret_val
 
+@APP.get("/get_run_list", status_code=200)
+async def get_the_run_list():
+    """
+    Gets the run information for the last 100 runs.
+
+    """
+
+    # init the returned html status code
+    status_code = 200
+
+    try:
+        # create the postgres access object
+        pg_db = PGUtils()
+
+        # get the run records
+        ret_val = pg_db.get_run_list()
+
+    except Exception as e:
+        # return a failure message
+        ret_val = f'Exception detected trying to gather run data'
+
+        # log the exception
+        logger.exception(ret_val, e)
+
+        # set the status to a server error
+        status_code = 500
+
+    # return to the caller
+    return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
 
 @APP.get("/get_log_file_list")
 async def get_the_log_file_list():
     """
     Gets the log file list. each of these entries could be used in the get_log_file endpoint
 
-    :return:
     """
 
     # return the list to the caller in JSON format
@@ -131,8 +159,6 @@ async def get_the_log_file(log_file_path: str = Query('log_file_path')):
     """
     Gets the log file specified. This method expects the full file path.
 
-    :param log_file_path:
-    :return:
     """
 
     # return the file to the caller
@@ -148,9 +174,6 @@ async def set_the_supervisor_image_version(job_name: JobName, version: str):
     Notes:
      - The version label must match what has been uploaded to docker hub
 
-    :param job_name:
-    :param version:
-    :return:
     """
     # init the returned html status code
     status_code = 200
@@ -204,10 +227,6 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
 
     ex: instance id: 3057, uid: 2021062406-namforecast, status: do not rerun
 
-    :param instance_id:
-    :param uid:
-    :param status:
-    :return:
     """
     # init the returned html status code
     status_code = 200
@@ -251,7 +270,6 @@ async def display_job_definitions() -> json:
     """
     Displays the job definitions.
 
-    :return:
     """
 
     # init the returned html status code

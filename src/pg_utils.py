@@ -92,6 +92,30 @@ class PGUtils:
         # get the data
         return self.exec_sql(sql)
 
+    def get_run_list(self):
+        """
+        gets the last 100 job runs
+
+        :return:
+        """
+
+        # create the sql
+        sql: str = """
+                        SELECT json_agg(runs)
+                        FROM
+                        (
+                            SELECT DISTINCT id, instance_id, uid, value AS status
+                            FROM public."ASGS_Mon_config_item"
+                            WHERE KEY IN ('supervisor_job_status')
+                            AND instance_id IN (SELECT id FROM public."ASGS_Mon_instance" ORDER BY id DESC)
+                            ORDER BY instance_id DESC, id DESC LIMIT 100
+                        ) runs;"""
+
+        data = self.exec_sql(sql)
+
+        # get the data
+        return data
+
     def update_job_image(self, job_name: str, image: str):
         """
         updates the image version
