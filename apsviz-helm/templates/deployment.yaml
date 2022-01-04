@@ -62,7 +62,7 @@ spec:
 
           volumeMounts:
             - name: eds-data-vol
-              mountPath: {{ .Values.data.data_mount_path }}
+              mountPath: /data
           command:
             - 'uvicorn'
           args:
