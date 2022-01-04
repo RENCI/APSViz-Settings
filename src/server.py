@@ -106,8 +106,8 @@ def get_file_list():
                 file_path = os.path.join(path, name).replace('\\', '/')
 
                 # save the data in a dict
-                ret_val.update({f'{name}_{counter}': {'file_path': file_path, 'url': f'http://apsviz-settings.apps.renci.org/get_log_file/?log_file_path={file_path}'}})
-                logger.info(f'get_file_list(): url: http://apsviz-settings.apps.renci.org/get_log_file/?log_file_path={file_path}')
+                ret_val.update({f'{name}_{counter}': {'file_path': file_path, 'url': f'https://apsviz-settings.apps.renci.org/get_log_file/?log_file_path={file_path}'}})
+                logger.info(f'get_file_list(): url: https://apsviz-settings.apps.renci.org/get_log_file/?log_file_path={file_path}')
 
     # return the list to the caller
     return ret_val
