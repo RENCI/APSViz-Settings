@@ -113,6 +113,47 @@ def get_file_list():
     # return the list to the caller
     return ret_val
 
+
+@APP.get('/get_job_defs', status_code=200)
+async def display_job_definitions() -> json:
+    """
+    Displays the job definitions.
+
+    """
+
+    # init the returned html status code
+    status_code = 200
+
+    try:
+        # create the postgres access object
+        pg_db = PGUtils()
+
+        # try to make the call for records
+        job_data = pg_db.get_job_defs()
+
+        # get the data looking like we are used to
+        ret_val = {list(x)[0]: x.get(list(x)[0]) for x in job_data}
+
+        # fix the arrays for each job def.
+        # they come in as a string
+        for item in ret_val.items():
+            item[1]['COMMAND_LINE'] = json.loads(item[1]['COMMAND_LINE'])
+            item[1]['COMMAND_MATRIX'] = json.loads(item[1]['COMMAND_MATRIX'])
+
+    except Exception as e:
+        # return a failure message
+        ret_val = f'Exception detected trying to get the job definitions'
+
+        # log the exception
+        logger.exception(ret_val, e)
+
+        # set the status to a server error
+        status_code = 500
+
+    # return to the caller
+    return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
+
+
 @APP.get("/get_run_list", status_code=200)
 async def get_the_run_list():
     """
@@ -143,6 +184,7 @@ async def get_the_run_list():
     # return to the caller
     return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
 
+
 @APP.get("/get_log_file_list")
 async def get_the_log_file_list():
     """
@@ -162,7 +204,7 @@ async def get_the_log_file(log_file_path: str = Query('log_file_path')):
     """
 
     # return the file to the caller
-    return FileResponse(path=log_file_path, filename=os.path.basename(log_file_path), media_type='text/plain') # , filename=log_file.name
+    return FileResponse(path=log_file_path, filename=os.path.basename(log_file_path), media_type='text/plain')
 
 
 # updates the image version for a job
@@ -263,43 +305,3 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
 
     # return to the caller
     return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
-
-
-@APP.get('/get_job_defs', status_code=200)
-async def display_job_definitions() -> json:
-    """
-    Displays the job definitions.
-
-    """
-
-    # init the returned html status code
-    status_code = 200
-
-    try:
-        # create the postgres access object
-        pg_db = PGUtils()
-
-        # try to make the call for records
-        job_data = pg_db.get_job_defs()
-
-        # get the data looking like we are used to
-        ret_val = {list(x)[0]: x.get(list(x)[0]) for x in job_data}
-
-        # fix the arrays for each job def.
-        # they come in as a string
-        for item in ret_val.items():
-            item[1]['COMMAND_LINE'] = json.loads(item[1]['COMMAND_LINE'])
-            item[1]['COMMAND_MATRIX'] = json.loads(item[1]['COMMAND_MATRIX'])
-
-    except Exception as e:
-        # return a failure message
-        ret_val = f'Exception detected trying to get the job definitions'
-
-        # log the exception
-        logger.exception(ret_val, e)
-
-        # set the status to a server error
-        status_code = 500
-
-    # return to the caller
-    return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
