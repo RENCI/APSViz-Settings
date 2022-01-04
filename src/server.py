@@ -207,11 +207,57 @@ async def get_the_run_list():
     return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
 
 
+# sets the run.properties run status to 'new' for a job
+@APP.put('/instance_id/{instance_id}/uid/{uid}/status/{status}', status_code=200)
+async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = RunStatus('new')):
+    """
+    Updates the run properties run status of a job.
+
+    ex: instance id: 3057, uid: 2021062406-namforecast, status: do not rerun
+
+    """
+    # init the returned html status code
+    status_code = 200
+
+    # is this a valid instance id
+    if instance_id > 0:
+        try:
+            # create the postgres access object
+            pg_db = PGUtils()
+
+            # try to make the update
+            pg_db.update_run_status(instance_id, uid, status)
+
+            # return a success message
+            ret_val = f'The status of run {instance_id}/{uid} has been set to {status}'
+        except Exception as e:
+            # return a failure message
+            ret_val = f'Exception detected trying to update run {instance_id}/{uid} to {status}'
+
+            # log the exception
+            logger.exception(ret_val, e)
+
+            # set the status to a server error
+            status_code = 500
+    else:
+        # return a failure message
+        ret_val = f'Error: The instance if {instance_id} is invalid. An instance must be a non-zero integer.'
+
+        # log the error
+        logger.error(ret_val)
+
+        # set the status to a bad request
+        status_code = 400
+
+    # return to the caller
+    return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
+
+
 # updates the image version for a job
 @APP.put('/job_name/{job_name}/image_version/{version}', status_code=200)
-async def set_the_supervisor_image_version(job_name: JobName, version: str):
+async def set_the_supervisor_component_image_version(job_name: JobName, version: str):
     """
-    Updates a job's image version label in the supervisor job run configuration.
+    Updates a supervisor component image version label in the supervisor job run configuration.
 
     Notes:
      - The version label must match what has been uploaded to docker hub
@@ -256,52 +302,6 @@ async def set_the_supervisor_image_version(job_name: JobName, version: str):
 
         # set the status to a server error
         status_code = 500
-
-    # return to the caller
-    return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
-
-
-# sets the run.properties run status to 'new' for a job
-@APP.put('/instance_id/{instance_id}/uid/{uid}/status/{status}', status_code=200)
-async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = RunStatus('new')):
-    """
-    Updates the run properties run status to 'new' for a job.
-
-    ex: instance id: 3057, uid: 2021062406-namforecast, status: do not rerun
-
-    """
-    # init the returned html status code
-    status_code = 200
-
-    # is this a valid instance id
-    if instance_id > 0:
-        try:
-            # create the postgres access object
-            pg_db = PGUtils()
-
-            # try to make the update
-            pg_db.update_run_status(instance_id, uid, status)
-
-            # return a success message
-            ret_val = f'The status of run {instance_id}/{uid} has been set to {status}'
-        except Exception as e:
-            # return a failure message
-            ret_val = f'Exception detected trying to update run {instance_id}/{uid} to {status}'
-
-            # log the exception
-            logger.exception(ret_val, e)
-
-            # set the status to a server error
-            status_code = 500
-    else:
-        # return a failure message
-        ret_val = f'Error: The instance if {instance_id} is invalid. An instance must be a non-zero integer.'
-
-        # log the error
-        logger.error(ret_val)
-
-        # set the status to a bad request
-        status_code = 400
 
     # return to the caller
     return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
