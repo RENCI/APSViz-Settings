@@ -5,7 +5,7 @@ import os
 import re
 from enum import Enum
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 
@@ -25,7 +25,7 @@ if not os.path.exists(log_path):
 logger = LoggingUtil.init_logging("APSVIZ.Settings", level=log_level, line_format='medium', log_file_path=log_path)
 
 # set the app version
-APP_VERSION = '0.0.1'
+APP_VERSION = '0.0.2'
 
 # declare the FastAPI details
 APP = FastAPI(
@@ -90,14 +90,24 @@ def get_file_list():
     # init the return
     ret_val = {}
 
+    # init a file counter
+    counter = 0
+
     # go through the root and sub-dirs to find the log files
     for path, dnames, fnames in os.walk(log_path):
         # for each name in that path
         for name in fnames:
             # is it a log file
             if rx.search(name):
-                # save the file
-                ret_val.update({name: os.path.join(path, name)})
+                # increment the counter
+                counter += 1
+
+                # create the path to the file
+                file_path = os.path.join(path, name).replace('\\', '/')
+
+                # save the data in a dict
+                ret_val.update({f'{name}_{counter}': {'file_path': file_path, 'url': f'http://apsviz-settings.apps.renci.org/get_log_file/?log_file_path={file_path}'}})
+                logger.info(f'get_file_list(): url: http://apsviz-settings.apps.renci.org/get_log_file/?log_file_path={file_path}')
 
     # return the list to the caller
     return ret_val
@@ -115,8 +125,8 @@ async def get_the_log_file_list():
     return JSONResponse(content={'Response': get_file_list()}, status_code=200, media_type="application/json")
 
 
-@APP.get("/get_log_file/{log_file_path}")
-async def get_the_log_file(log_file_path: str):
+@APP.get("/get_log_file/")
+async def get_the_log_file(log_file_path: str = Query('log_file_path')):
     """
     Gets the log file specified. This method expects the full file path.
 
