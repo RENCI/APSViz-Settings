@@ -25,7 +25,7 @@ if not os.path.exists(log_path):
 logger = LoggingUtil.init_logging("APSVIZ.Settings", level=log_level, line_format='medium', log_file_path=log_path)
 
 # set the app version
-APP_VERSION = '0.0.2'
+APP_VERSION = 'v0.0.2'
 
 # declare the FastAPI details
 APP = FastAPI(
