@@ -104,11 +104,16 @@ class PGUtils:
                         SELECT json_agg(runs)
                         FROM
                         (
-                            SELECT DISTINCT id, instance_id, uid, value AS status
-                            FROM public."ASGS_Mon_config_item"
-                            WHERE KEY IN ('supervisor_job_status')
-                            AND instance_id IN (SELECT id FROM public."ASGS_Mon_instance" ORDER BY id DESC)
-                            ORDER BY instance_id DESC, id DESC LIMIT 100
+                            SELECT DISTINCT 
+                                id, instance_id, uid, value AS status
+                            FROM 
+                                public."ASGS_Mon_config_item"
+                            WHERE 
+                                KEY IN ('supervisor_job_status')
+                                AND instance_id IN (SELECT id FROM public."ASGS_Mon_instance" ORDER BY id DESC)
+                            ORDER BY 
+                                instance_id DESC, id DESC 
+                            LIMIT 100
                         ) runs;"""
 
         data = self.exec_sql(sql)
@@ -118,7 +123,7 @@ class PGUtils:
 
     def update_job_image(self, job_name: str, image: str):
         """
-        updates the image version
+        Updates the image version
 
         :param job_name:
         :param image:
@@ -133,7 +138,7 @@ class PGUtils:
 
     def update_run_status(self, instance_id: int, uid: str, status: str):
         """
-        updates the run properties run status to 'new'.
+        Updates the run properties run status to 'new'.
 
         :param instance_id:
         :param uid:
