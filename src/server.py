@@ -193,6 +193,13 @@ async def get_the_run_list():
         # get the run records
         ret_val = pg_db.get_run_list()
 
+        # add a final status to each record
+        for r in ret_val:
+            if r['status'].find('Error') > -1:
+                r['final_status'] = 'Error'
+            else:
+                r['final_status'] = 'Success'
+
     except Exception as e:
         # return a failure message
         ret_val = f'Exception detected trying to gather run data'
