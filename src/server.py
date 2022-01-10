@@ -12,6 +12,9 @@ from fastapi.responses import JSONResponse, FileResponse
 from common.logging import LoggingUtil
 from src.pg_utils import PGUtils
 
+# set the app version
+APP_VERSION = 'v0.0.3'
+
 # get the log level and directory from the environment.
 # level comes from the container dockerfile, path comes from the k8s secrets
 log_level: int = int(os.getenv('LOG_LEVEL', logging.INFO))
@@ -23,9 +26,6 @@ if not os.path.exists(log_path):
 
 # create a logger
 logger = LoggingUtil.init_logging("APSVIZ.Settings", level=log_level, line_format='medium', log_file_path=log_path)
-
-# set the app version
-APP_VERSION = 'v0.0.2'
 
 # declare the FastAPI details
 APP = FastAPI(
