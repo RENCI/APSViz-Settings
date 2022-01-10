@@ -106,8 +106,9 @@ def get_log_file_list():
                 file_path = os.path.join(path, name).replace('\\', '/')
                 url = f'https://apsviz-settings.apps.renci.org/get_log_file/?log_file_path={file_path}'
 
-                # save the data in a dict
-                ret_val.update({f'{name}_{counter}': {'file_path': file_path, 'url': f'{url}'}})
+                # save the absolute file path, endpoint url, and file size in a dict
+                ret_val.update({f'{name}_{counter}': {'file_path': file_path, 'url': f'{url}', 'file_size': f'{os.path.getsize(file_path)} bytes'}})
+
                 logger.debug(f'get_file_list(): url: {url}')
 
     # return the list to the caller
