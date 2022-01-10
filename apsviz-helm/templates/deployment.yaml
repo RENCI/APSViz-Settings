@@ -99,14 +99,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: eds-pvc
-spec:
-  accessModes:
-  - ReadWriteMany
-  resources:
-    requests:
-      storage: 250Gi
