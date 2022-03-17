@@ -4,7 +4,7 @@
 # gets the APSVIZ-Settings repo
 # and runs main which starts the web server
 
-FROM python:3.9.7
+FROM renciorg/renci-python-image:v0.0.1
 
 # get some credit
 LABEL maintainer="powen@renci.org"
@@ -27,8 +27,14 @@ RUN git clone https://github.com/RENCI/APSVIZ-Settings.git
 # go to the repo dir
 WORKDIR /repo/APSVIZ-Settings
 
+# make sure everything is read/write in the repo code
+RUN chmod 777 -R .
+
 # install requirements
 RUN pip install -r requirements.txt
+
+# switch to the non-root user (nru). defined in the base image
+USER nru
 
 # expose the default port
 EXPOSE 4000
