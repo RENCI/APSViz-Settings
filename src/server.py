@@ -5,7 +5,7 @@ import os
 import re
 from enum import Enum
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 
@@ -78,7 +78,7 @@ class RunStatus(str, Enum):
     debug = 'debug'
 
 
-def get_log_file_list():
+def get_log_file_list(hostname):
     """
     Gets all the log file path/names
 
@@ -104,7 +104,7 @@ def get_log_file_list():
 
                 # create the path to the file
                 file_path = os.path.join(path, name).replace('\\', '/')
-                url = f'https://apsviz-settings.apps.renci.org/get_log_file/?log_file_path={file_path}'
+                url = f'{hostname}/get_log_file/?log_file_path={file_path}'
 
                 # save the absolute file path, endpoint url, and file size in a dict
                 ret_val.update({f'{name}_{counter}': {'file_path': file_path, 'url': f'{url}', 'file_size': f'{os.path.getsize(file_path)} bytes'}})
@@ -167,14 +167,14 @@ async def get_the_log_file(log_file_path: str = Query('log_file_path')):
 
 
 @APP.get("/get_log_file_list")
-async def get_the_log_file_list():
+async def get_the_log_file_list(request: Request):
     """
     Gets the log file list. each of these entries could be used in the get_log_file endpoint
 
     """
 
     # return the list to the caller in JSON format
-    return JSONResponse(content={'Response': get_log_file_list()}, status_code=200, media_type="application/json")
+    return JSONResponse(content={'Response': get_log_file_list(f'{request.base_url.scheme}://{request.base_url.netloc}')}, status_code=200, media_type="application/json")
 
 
 @APP.get("/get_run_list", status_code=200)
