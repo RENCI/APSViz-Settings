@@ -28,6 +28,8 @@ class PGUtils:
         # create a connection string
         conn_str = f"host={host} port={port} dbname={database} user={username} password={password}"
 
+        print(f'conn_str"{conn_str}')
+
         # connect to the DB
         self.conn = psycopg2.connect(conn_str)
 
