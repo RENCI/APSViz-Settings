@@ -1,6 +1,7 @@
 import os
 import psycopg2
 import logging
+import time
 from common.logging import LoggingUtil
 
 
@@ -26,16 +27,89 @@ class PGUtils:
         port = os.environ.get('ASGS_DB_PORT')
 
         # create a connection string
-        conn_str = f"host={host} port={port} dbname={database} user={username} password={password}"
+        self.conn_str = f"host={host} port={port} dbname={database} user={username} password={password}"
 
-        # connect to the DB
-        self.conn = psycopg2.connect(conn_str)
+        # init the DB connection objects
+        self.conn = None
+        self.cursor = None
 
-        # insure records are updated immediately
-        self.conn.autocommit = True
+        # get a db connection and cursor
+        self.get_db_connection()
 
-        # create the connection cursor
-        self.cursor = self.conn.cursor()
+    def get_db_connection(self):
+        """
+        Gets a connection to the DB. performs a check to continue trying until
+        a connection is made
+
+        :return:
+        """
+        # init the connection status indicator
+        good_conn = False
+
+        # until forever
+        while not good_conn:
+            # check the DB connection
+            good_conn = self.check_db_connection()
+
+            try:
+                # do we have a good connection
+                if not good_conn:
+                    # connect to the DB
+                    self.conn = psycopg2.connect(self.conn_str)
+
+                    # insure records are updated immediately
+                    self.conn.autocommit = True
+
+                    # create the connection cursor
+                    self.cursor = self.conn.cursor()
+
+                    # check the DB connection
+                    good_conn = self.check_db_connection()
+
+                    # is the connection ok now?
+                    if good_conn:
+                        # ok to continue
+                        return
+                else:
+                    # ok to continue
+                    return
+            except (Exception, psycopg2.DatabaseError):
+                good_conn = False
+
+            self.logger.error(f'DB Connection failed. Retrying...')
+            time.sleep(5)
+
+    def check_db_connection(self) -> bool:
+        """
+        checks to see if there is a good connection to the DB
+
+        :return: boolean
+        """
+        # init the return value
+        ret_val = None
+
+        try:
+            # is there a connection
+            if not self.conn or not self.cursor:
+                ret_val = False
+            else:
+                # get the DB version
+                self.cursor.execute("SELECT version()")
+
+                # get the value
+                db_version = self.cursor.fetchone()
+
+                # did we get a value
+                if db_version:
+                    # update the return flag
+                    ret_val = True
+
+        except (Exception, psycopg2.DatabaseError):
+            # connect failed
+            ret_val = False
+
+        # return to the caller
+        return ret_val
 
     def __del__(self):
         """
@@ -52,13 +126,19 @@ class PGUtils:
         except Exception as e:
             self.logger.error(f'Error detected closing cursor or connection. {e}')
 
-    def exec_sql(self, sql_stmt: str):
+    def exec_sql(self, sql_stmt):
         """
         executes a sql statement
 
         :param sql_stmt:
         :return:
         """
+        # init the return
+        ret_val = None
+
+        # insure we have a valid DB connection
+        self.get_db_connection()
+
         try:
             # execute the sql
             self.cursor.execute(sql_stmt)
@@ -74,10 +154,11 @@ class PGUtils:
                 # get the one and only record of json
                 ret_val = ret_val[0]
 
-            # return to the caller
-            return ret_val
         except Exception as e:
             self.logger.error(f'Error detected executing SQL: {sql_stmt}. {e}')
+
+        # return to the caller
+        return ret_val
 
     def get_job_defs(self):
         """

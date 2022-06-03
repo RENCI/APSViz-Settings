@@ -44,38 +44,45 @@ APP.add_middleware(
 
 # declare the component image names
 image_name: dict = {
-    'hazus-': 'renciorg/adras:',
-    'hazus-singleton-': 'renciorg/adras:',
-    'obs-mod-supp-job-': 'renciorg/adcirc_supp:',
-    'run-geo-tiff-job-': 'renciorg/adcirc2mbtiles:',
+    'adcirc2cog-tiff-job-': 'renciorg/adcirc2cog:',
     'compute-mbtiles-job-0-10-': 'renciorg/adcirc2mbtiles:',
     'compute-mbtiles-job-11-': 'renciorg/adcirc2mbtiles:',
     'compute-mbtiles-job-12-': 'renciorg/adcirc2mbtiles:',
-    'staging-': 'renciorg/stagedata:',
     'final-staging-job-': 'renciorg/stagedata:',
-    'load-geo-server-job-': 'renciorg/load_geoserver:'}
+    'geotiff2cog-job-': 'renciorg/adcirc2cog:',
+    'hazus-': 'renciorg/adras:',
+    'hazus-singleton-': 'renciorg/adras:',
+    'load-geo-server-job-': 'renciorg/load_geoserver:',
+    'obs-mod-ast-job-': 'renciorg/ast_supp:',
+    'obs-mod-supp-job-': 'renciorg/adcirc_supp:',
+    'run-geo-tiff-job-': 'renciorg/adcirc2mbtiles:',
+    'staging-': 'renciorg/stagedata'
+}
 
 
 # declare the job names
 class JobName(str, Enum):
-    hazus = 'hazus'
-    hazus_singleton = 'hazus-singleton'
-    obs_mod_supp_job = 'obs-mod-supp-job'
-    run_geo_tiff_job = 'run-geo-tiff-job'
+    adcirc2cog_tiff_job = 'adcirc2cog-tiff-job'
     compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
     compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
     compute_mbtiles_job_12 = 'compute-mbtiles-job-12'
-    staging = 'staging'
     final_staging_job = 'final-staging-job'
+    geotiff2cog_job = 'geotiff2cog-job'
+    hazus = 'hazus'
+    hazus_singleton = 'hazus-singleton'
     load_geo_server_job = 'load-geo-server-job'
+    obs_mod_ast_job = 'obs-mod-ast-job'
+    obs_mod_supp_job = 'obs-mod-supp-job'
+    run_geo_tiff_job = 'run-geo-tiff-job'
+    staging = 'staging'
 
 
 # declare the run status types
 class RunStatus(str, Enum):
-    hazus = 'hazus'
     new = 'new'
-    do_not_rerun = 'do not rerun'
     debug = 'debug'
+    hazus = 'hazus'
+    do_not_rerun = 'do not rerun'
 
 
 def get_log_file_list(hostname):
