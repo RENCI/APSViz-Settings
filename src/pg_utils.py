@@ -6,7 +6,7 @@ from common.logging import LoggingUtil
 
 
 class PGUtils:
-    def __init__(self):
+    def __init__(self, dbname, username, password):
         # get the log level and directory from the environment.
         # level comes from the container dockerfile, path comes from the k8s secrets
         log_level: int = int(os.getenv('LOG_LEVEL', logging.INFO))
@@ -20,14 +20,11 @@ class PGUtils:
         self.logger = LoggingUtil.init_logging("APSVIZ.Settings.pg_utils", level=log_level, line_format='medium', log_file_path=log_path)
 
         # get configuration params from the pods secrets
-        username = os.environ.get('ASGS_DB_USERNAME')
-        password = os.environ.get('ASGS_DB_PASSWORD')
         host = os.environ.get('ASGS_DB_HOST')
-        database = os.environ.get('ASGS_DB_DATABASE')
         port = os.environ.get('ASGS_DB_PORT')
 
         # create a connection string
-        self.conn_str = f"host={host} port={port} dbname={database} user={username} password={password}"
+        self.conn_str = f"host={host} port={port} dbname={dbname} user={username} password={password}"
 
         # init the DB connection objects
         self.conn = None
@@ -169,6 +166,19 @@ class PGUtils:
 
         # create the sql
         sql: str = 'SELECT public.get_supervisor_job_defs_json()'
+
+        # get the data
+        return self.exec_sql(sql)
+
+    def get_terria_map_catalog_data(self):
+        """
+        gets the catalog data for the terria map UI
+
+        :return:
+        """
+
+        # create the sql
+        sql: str = 'SELECT public.get_terria_data_json()'
 
         # get the data
         return self.exec_sql(sql)

@@ -13,12 +13,22 @@ from common.logging import LoggingUtil
 from src.pg_utils import PGUtils
 
 # set the app version
-APP_VERSION = 'v0.0.5'
+APP_VERSION = 'v0.0.6'
 
 # get the log level and directory from the environment.
 # level comes from the container dockerfile, path comes from the k8s secrets
 log_level: int = int(os.getenv('LOG_LEVEL', logging.INFO))
 log_path: str = os.getenv('LOG_PATH', os.path.join(os.path.dirname(__file__), 'logs'))
+
+# get the DB connection details for the asgs DB
+asgs_dbname = os.environ.get('ASGS_DB_DATABASE')
+asgs_username = os.environ.get('ASGS_DB_USERNAME')
+asgs_password = os.environ.get('ASGS_DB_PASSWORD')
+
+# get the DB connection details for the apsviz DB
+apsviz_dbname = os.environ.get('APSVIZ_DB_DATABASE')
+apsviz_username = os.environ.get('APSVIZ_DB_USERNAME')
+apsviz_password = os.environ.get('APSVIZ_DB_PASSWORD')
 
 # create the dir if it does not exist
 if not os.path.exists(log_path):
@@ -134,7 +144,7 @@ async def display_job_definitions() -> json:
 
     try:
         # create the postgres access object
-        pg_db = PGUtils()
+        pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
 
         # try to make the call for records
         job_data = pg_db.get_job_defs()
@@ -151,6 +161,37 @@ async def display_job_definitions() -> json:
     except Exception as e:
         # return a failure message
         ret_val = f'Exception detected trying to get the job definitions'
+
+        # log the exception
+        logger.exception(ret_val, e)
+
+        # set the status to a server error
+        status_code = 500
+
+    # return to the caller
+    return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
+
+
+@APP.get('/get_terria_map_data', status_code=200)
+async def get_terria_map_catalog_data() -> json:
+    """
+    Gets the terria map UI catalog data.
+
+    """
+
+    # init the returned html status code
+    status_code = 200
+
+    try:
+        # create the postgres access object
+        pg_db = PGUtils(apsviz_dbname, apsviz_username, apsviz_password)
+
+        # try to make the call for records
+        ret_val = pg_db.get_terria_map_catalog_data()
+
+    except Exception as e:
+        # return a failure message
+        ret_val = f'Exception detected trying to get the terria map catalog data.'
 
         # log the exception
         logger.exception(ret_val, e)
@@ -196,7 +237,7 @@ async def get_the_run_list():
 
     try:
         # create the postgres access object
-        pg_db = PGUtils()
+        pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
 
         # get the run records
         ret_val = pg_db.get_run_list()
@@ -238,7 +279,7 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
     if instance_id > 0:
         try:
             # create the postgres access object
-            pg_db = PGUtils()
+            pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
 
             # try to make the update
             pg_db.update_run_status(instance_id, uid, status)
@@ -291,7 +332,7 @@ async def set_the_supervisor_component_image_version(job_name: JobName, version:
             job_name = JobName(job_name).value + '-'
 
             # create the postgres access object
-            pg_db = PGUtils()
+            pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
 
             # try to make the update
             pg_db.update_job_image(job_name, image_name[job_name] + version)
