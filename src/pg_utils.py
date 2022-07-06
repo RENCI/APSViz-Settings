@@ -141,15 +141,12 @@ class PGUtils:
             self.cursor.execute(sql_stmt)
 
             # get the returned value
-            ret_val = self.cursor.fetchone()
+            ret_val = self.cursor.fetchall()
 
             # trap the return
             if ret_val is None or ret_val[0] is None:
                 # specify a return code on an empty result
                 ret_val = -1
-            else:
-                # get the one and only record of json
-                ret_val = ret_val[0]
 
         except Exception as e:
             self.logger.error(f'Error detected executing SQL: {sql_stmt}. {e}')
@@ -166,6 +163,46 @@ class PGUtils:
 
         # create the sql
         sql: str = 'SELECT public.get_supervisor_job_defs_json()'
+
+        # get the data
+        return self.exec_sql(sql)[0][0]
+
+    def get_job_types(self):
+        """
+        gets the supervisor job type definitions
+
+        :return:
+        """
+
+        # create the sql
+        sql: str = 'SELECT id, name FROM public."ASGS_Mon_supervisor_job_type_lu";'
+
+        # get the data
+        return self.exec_sql(sql)
+
+    def get_job_order(self):
+        """
+        gets the supervisor job order
+
+        :return:
+        """
+
+        # create the sql
+        sql: str = """ WITH recursive linkedlist AS (
+                          -- start with the staging (11) record
+                          SELECT sc.*, jt1.name AS process, jt2.name AS next_process FROM public."ASGS_Mon_supervisor_config" sc
+                          JOIN public."ASGS_Mon_supervisor_job_type_lu" jt1 ON jt1.id=sc.job_type_id
+                          JOIN public."ASGS_Mon_supervisor_job_type_lu" jt2 ON jt2.id=sc.next_job_type_id
+                          WHERE sc.job_type_id = 11
+                          -- now add on the recursive records
+                          UNION
+                          SELECT n.*, jt1.name, jt2.name FROM public."ASGS_Mon_supervisor_config" n
+                          JOIN linkedlist ll ON n.job_type_id = ll.next_job_type_id
+                          JOIN public."ASGS_Mon_supervisor_job_type_lu" jt1 ON jt1.id=n.job_type_id
+                          JOIN public."ASGS_Mon_supervisor_job_type_lu" jt2 ON jt2.id=n.next_job_type_id
+                        )
+                        -- output the linked list
+                        SELECT ll.id, ll.process FROM linkedlist ll;"""
 
         # get the data
         return self.exec_sql(sql)
@@ -207,12 +244,27 @@ class PGUtils:
                             LIMIT 100
                         ) runs;"""
 
-        data = self.exec_sql(sql)
+        data = self.exec_sql(sql)[0][0]
 
         # get the data
         return data
 
-    def update_job_image(self, job_name: str, image: str):
+    def update_next_job_for_job(self, job_name: str, next_process_id: int):
+        """
+        Updates the next job process id for a job
+
+        :param job_name:
+        :param next_process_id:
+        :return: nothing
+        """
+
+        # create the sql
+        sql = f"SELECT public.update_next_job_for_job('{job_name}', {next_process_id})"
+
+        # run the SQL
+        self.exec_sql(sql)
+
+    def update_job_image_version(self, job_name: str, image: str):
         """
         Updates the image version
 

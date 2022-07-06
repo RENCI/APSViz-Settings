@@ -13,7 +13,7 @@ from common.logging import LoggingUtil
 from src.pg_utils import PGUtils
 
 # set the app version
-APP_VERSION = 'v0.0.6'
+APP_VERSION = 'v0.0.7'
 
 # get the log level and directory from the environment.
 # level comes from the container dockerfile, path comes from the k8s secrets
@@ -52,27 +52,27 @@ APP.add_middleware(
     allow_headers=["*"],
 )
 
-# declare the component image names
-image_name: dict = {
-    'adcirc2cog-tiff-job-': 'renciorg/adcirc2cog:',
-    'compute-mbtiles-job-0-10-': 'renciorg/adcirc2mbtiles:',
-    'compute-mbtiles-job-11-': 'renciorg/adcirc2mbtiles:',
-    'compute-mbtiles-job-12-': 'renciorg/adcirc2mbtiles:',
-    'final-staging-job-': 'renciorg/stagedata:',
-    'geotiff2cog-job-': 'renciorg/adcirc2cog:',
-    'hazus-': 'renciorg/adras:',
-    'hazus-singleton-': 'renciorg/adras:',
-    'load-geo-server-job-': 'renciorg/load_geoserver:',
-    'obs-mod-ast-job-': 'renciorg/ast_supp:',
-    'obs-mod-supp-job-': 'renciorg/adcirc_supp:',
-    'run-geo-tiff-job-': 'renciorg/adcirc2mbtiles:',
-    'staging-': 'renciorg/stagedata'
-}
 
-
-# declare the job names
-class JobName(str, Enum):
+# declare the job type names
+class JobTypeName(str, Enum):
     adcirc2cog_tiff_job = 'adcirc2cog-tiff-job'
+    compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
+    compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
+    compute_mbtiles_job_12 = 'compute-mbtiles-job-12'
+    final_staging_job = 'final-staging-job'
+    geotiff2cog_job = 'geotiff2cog-job'
+    hazus = 'hazus'
+    hazus_singleton = 'hazus-singleton'
+    load_geo_server_job = 'load-geo-server-job'
+    obs_mod_ast_job = 'obs-mod-ast-job'
+    obs_mod_supp_job = 'obs-mod-supp-job'
+    run_geo_tiff_job = 'run-geo-tiff-job'
+    staging = 'staging'
+
+# declare the job type names
+class NextJobTypeName(str, Enum):
+    adcirc2cog_tiff_job = 'adcirc2cog-tiff-job'
+    complete = 'complete'
     compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
     compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
     compute_mbtiles_job_12 = 'compute-mbtiles-job-12'
@@ -93,6 +93,42 @@ class RunStatus(str, Enum):
     debug = 'debug'
     hazus = 'hazus'
     do_not_rerun = 'do not rerun'
+
+
+# declare the component job type image name
+job_type_to_image_name: dict = {
+    'adcirc2cog-tiff-job': 'renciorg/adcirc2cog:',
+    'compute-mbtiles-job-0-10': 'renciorg/adcirc2mbtiles:',
+    'compute-mbtiles-job-11': 'renciorg/adcirc2mbtiles:',
+    'compute-mbtiles-job-12': 'renciorg/adcirc2mbtiles:',
+    'final-staging-job': 'renciorg/stagedata:',
+    'geotiff2cog-job': 'renciorg/adcirc2cog:',
+    'hazus': 'renciorg/adras:',
+    'hazus-singleton': 'renciorg/adras:',
+    'load-geo-server-job': 'renciorg/load_geoserver:',
+    'obs-mod-ast-job': 'renciorg/ast_supp:',
+    'obs-mod-supp-job': 'renciorg/adcirc_supp:',
+    'run-geo-tiff-job': 'renciorg/adcirc2mbtiles:',
+    'staging': 'renciorg/stagedata:'
+}
+
+# declare job name to id
+job_type_name_to_id: dict = {
+  "adcirc2cog-tiff-job": 23,
+  "complete": 21,
+  "compute-mbtiles-job-0-10": 16,
+  "compute-mbtiles-job-11": 17,
+  "compute-mbtiles-job-12": 18,
+  "final-staging-job": 20,
+  "geotiff2cog-job": 24,
+  "hazus": 12,
+  "hazus-singleton": 13,
+  "load-geo-server-job": 19,
+  "obs-mod-ast-job": 25,
+  "obs-mod-supp-job": 14,
+  "run-geo-tiff-job": 15,
+  "staging": 11
+}
 
 
 def get_log_file_list(hostname):
@@ -132,6 +168,40 @@ def get_log_file_list(hostname):
     return ret_val
 
 
+@APP.get('/get_job_order', status_code=200)
+async def display_job_order() -> json:
+    """
+    Displays the job process order.
+
+    """
+
+    # init the returned html status code
+    status_code = 200
+
+    try:
+        # create the postgres access object
+        pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
+
+        # try to make the call for records
+        job_order = pg_db.get_job_order()
+
+        # make the data readable
+        ret_val = [x[1] for x in job_order]
+
+    except Exception as e:
+        # return a failure message
+        ret_val = f'Exception detected trying to get the job order'
+
+        # log the exception
+        logger.exception(ret_val, e)
+
+        # set the status to a server error
+        status_code = 500
+
+    # return to the caller
+    return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
+
+
 @APP.get('/get_job_defs', status_code=200)
 async def display_job_definitions() -> json:
     """
@@ -149,7 +219,7 @@ async def display_job_definitions() -> json:
         # try to make the call for records
         job_data = pg_db.get_job_defs()
 
-        # get the data looking like we are used to
+        # make the data readable
         ret_val = {list(x)[0]: x.get(list(x)[0]) for x in job_data}
 
         # fix the arrays for each job def.
@@ -309,9 +379,9 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
     return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
 
 
-# updates the image version for a job
-@APP.put('/job_name/{job_name}/image_version/{version}', status_code=200)
-async def set_the_supervisor_component_image_version(job_name: JobName, version: str):
+# Updates the image version for a job
+@APP.put('/job_type_name/{job_type_name}/image_version/{version}', status_code=200)
+async def set_the_supervisor_component_image_version(job_type_name: JobTypeName, version: str):
     """
     Updates a supervisor component image version label in the supervisor job run configuration.
 
@@ -324,21 +394,18 @@ async def set_the_supervisor_component_image_version(job_name: JobName, version:
 
     try:
         # create a regex pattern for the version number
-        pattern = re.compile(r"([v]\d\.+\d\.+\d)")
+        pattern = re.compile(r"(v\d\.+\d\.+\d)")
 
-        # insure that the input params are legit
+        # makesure that the input params are legit
         if pattern.search(version):
-            # make sure the underscores end with a hyphen
-            job_name = JobName(job_name).value + '-'
-
             # create the postgres access object
             pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
 
-            # try to make the update
-            pg_db.update_job_image(job_name, image_name[job_name] + version)
+            # make the update. fix the job name (hyphen) so it matches the DB format
+            pg_db.update_job_image_version(JobTypeName(job_type_name).value + '-', job_type_to_image_name[job_type_name] + version)
 
             # return a success message
-            ret_val = f'The docker image:version for job name {job_name} has been set to {image_name[job_name] + version}'
+            ret_val = f'The docker image:version for job name {job_type_name} has been set to {job_type_to_image_name[job_type_name] + version}'
         else:
             # return a success message
             ret_val = f'Error: The version {version} is invalid. Please use a value in the form of v<int>.<int>.<int>'
@@ -351,7 +418,73 @@ async def set_the_supervisor_component_image_version(job_name: JobName, version:
 
     except Exception as e:
         # return a failure message
-        ret_val = f'Exception detected trying to update the image version. Job name {job_name}, version: {version}'
+        ret_val = f'Exception detected trying to update the image version {job_type_name} to version {version}'
+
+        # log the exception
+        logger.exception(ret_val, e)
+
+        # set the status to a server error
+        status_code = 500
+
+    # return to the caller
+    return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
+
+
+# Updates a supervisor component's next process.
+@APP.put('/job_type_name/{job_type_name}/next_job_type/{next_job_type_name}', status_code=200)
+async def set_the_supervisor_job_order(job_type_name: JobTypeName, next_job_type_name: NextJobTypeName):
+    """
+    Modifies the supervisor component's linked list of jobs. Select the job process name and then select it's next job process name.
+
+    The normal sequence of jobs are:
+    staging -> hazus -> obs-mod (or obs-mod-ast) -> run adcirc to geo tiff (and/or COGs) -> compute mbtiles (and/or COGs) -> load geo server -> final staging -> complete
+    """
+    # init the returned html status code
+    status_code = 200
+
+    try:
+
+        # check for a recursive situation
+        if job_type_name == next_job_type_name:
+            # set the error msg
+            ret_val = f'You cannot specify a next job type equal to the target job type ({job_type_name}).'
+
+            # declare an error for the user
+            status_code = 500
+        else:
+            # convert the next job process name to an id
+            next_job_type_id = job_type_name_to_id.get(NextJobTypeName(next_job_type_name).value)
+
+            # did we get a good type id
+            if next_job_type_name is not None:
+                # create the postgres access object
+                pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
+
+                # prep the record to update key. complete does not have a hyphen
+                if job_type_name != 'complete':
+                    job_type_name += '-'
+
+                # make the update
+                pg_db.update_next_job_for_job(job_type_name, next_job_type_id)
+
+                # get the new job order
+                job_order = pg_db.get_job_order()
+
+                # get the data into a better form
+                job_order = [x[1] for x in job_order]
+
+                # return a success message with the new job order
+                ret_val = [{'message': f'The {job_type_name} next process has been set to {next_job_type_name}'}, {'new_order': job_order}]
+            else:
+                # set the error msg
+                ret_val = f'The next job process ID was not found for {next_job_type_name}'
+
+                # declare an error for the user
+                status_code = 500
+
+    except Exception as e:
+        # return a failure message
+        ret_val = f'Exception detected trying to update the next job name. Job name {job_type_name}, next job name: {next_job_type_name}'
 
         # log the exception
         logger.exception(ret_val, e)
