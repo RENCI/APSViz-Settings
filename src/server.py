@@ -9,7 +9,7 @@ from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 
-from common.logging import LoggingUtil
+from common.logger import LoggingUtil
 from src.pg_utils import PGUtils
 
 # set the app version
@@ -18,7 +18,7 @@ APP_VERSION = 'v0.0.7'
 # get the log level and directory from the environment.
 # level comes from the container dockerfile, path comes from the k8s secrets
 log_level: int = int(os.getenv('LOG_LEVEL', logging.INFO))
-log_path: str = os.getenv('LOG_PATH', os.path.join(os.path.dirname(__file__), 'logs'))
+log_path: str = os.getenv('LOG_PATH', os.path.dirname(__file__))
 
 # get the DB connection details for the asgs DB
 asgs_dbname = os.environ.get('ASGS_DB_DATABASE')

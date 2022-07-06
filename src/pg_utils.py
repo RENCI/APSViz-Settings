@@ -2,7 +2,7 @@ import os
 import psycopg2
 import logging
 import time
-from common.logging import LoggingUtil
+from common.logger import LoggingUtil
 
 
 class PGUtils:
