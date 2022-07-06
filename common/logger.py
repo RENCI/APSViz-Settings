@@ -2,6 +2,7 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 
+
 class LoggingUtil(object):
     """
     creates and configures a logger

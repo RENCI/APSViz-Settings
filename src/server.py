@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 
 from common.logger import LoggingUtil
-from src.pg_utils import PGUtils
+from pg_utils import PGUtils
 
 # set the app version
 APP_VERSION = 'v0.0.7'
@@ -68,6 +68,7 @@ class JobTypeName(str, Enum):
     obs_mod_supp_job = 'obs-mod-supp-job'
     run_geo_tiff_job = 'run-geo-tiff-job'
     staging = 'staging'
+
 
 # declare the job type names
 class NextJobTypeName(str, Enum):
