@@ -202,6 +202,42 @@ async def display_job_order() -> json:
     # return to the caller
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
+# @APP.get('/reset_job_order', status_code=200)
+# async def reset_job_order() -> json:
+#     """
+#     resets the job process order to the default.
+#
+#     The normal sequence of jobs are:
+#     staging -> hazus -> obs-mod (or obs-mod-ast) -> run adcirc to geo tiff (and/or COGs) -> compute mbtiles (and/or COGs) -> load geo server -> final staging -> complete
+#
+#     """
+#
+#     # init the returned html status code
+#     status_code = 200
+#
+#     try:
+#         # create the postgres access object
+#         pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
+#
+#         # try to make the call for records
+#         job_order = pg_db.reset_job_order()
+#
+#         # make the data readable
+#         ret_val = [x[1] for x in job_order]
+#
+#     except Exception as e:
+#         # return a failure message
+#         ret_val = f'Exception detected trying to get the job order'
+#
+#         # log the exception
+#         logger.exception(ret_val, e)
+#
+#         # set the status to a server error
+#         status_code = 500
+#
+#     # return to the caller
+#     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
+
 
 @APP.get('/get_job_defs', status_code=200)
 async def display_job_definitions() -> json:
@@ -272,6 +308,47 @@ async def get_terria_map_catalog_data() -> json:
 
     # return to the caller
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
+
+
+@APP.get('/get_terria_map_data_file', status_code=200)
+async def get_terria_map_catalog_data_file() -> FileResponse:
+    """
+    Gets the terria map UI catalog data.
+
+    """
+
+    # init the returned html status code
+    status_code = 200
+
+    try:
+        # create the postgres access object
+        pg_db = PGUtils(apsviz_dbname, apsviz_username, apsviz_password)
+
+        # try to make the call for records
+        ret_val = pg_db.get_terria_map_catalog_data()
+
+        # get the full file path
+        file_path = os.path.join(os.path.dirname(__file__), 'test_data.json')
+
+        # write out the data to a file
+        with open(file_path, 'w') as fp:
+            json.dump(ret_val, fp)
+
+    except Exception as e:
+        # return a failure message
+        ret_val = f'Exception detected trying to get the terria map catalog data.'
+
+        # log the exception
+        logger.exception(ret_val, e)
+
+        # set the status to a server error
+        status_code = 500
+
+        """
+        curl -X 'GET' 'http://localhost:4000/get_terria_map_data_file' -H 'accept: text/plain'
+        """
+    # return to the caller
+    return FileResponse(path=file_path, filename='test_data.json', media_type='text/plain')
 
 
 @APP.get("/get_log_file/")
