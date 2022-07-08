@@ -158,10 +158,10 @@ def get_log_file_list(hostname):
 
                 # create the path to the file
                 file_path = os.path.join(path, name).replace('\\', '/')
-                url = f'{hostname}/get_log_file/?log_file_path={file_path}'
+                url = f'{hostname}/get_log_file/?log_file={file_path.replace(log_path, "")[1:]}'
 
                 # save the absolute file path, endpoint url, and file size in a dict
-                ret_val.update({f'{name}_{counter}': {'file_path': file_path, 'url': f'{url}', 'file_size': f'{os.path.getsize(file_path)} bytes'}})
+                ret_val.update({f'{name}_{counter}': {'file_name': file_path.replace(log_path, "")[1:], 'url': f'{url}', 'file_size': f'{os.path.getsize(file_path)} bytes'}})
 
                 logger.debug(f'get_file_list(): url: {url}')
 
@@ -184,10 +184,7 @@ async def display_job_order() -> json:
         pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
 
         # try to make the call for records
-        job_order = pg_db.get_job_order()
-
-        # make the data readable
-        ret_val = [x[1] for x in job_order]
+        ret_val = pg_db.get_job_order()
 
     except Exception as e:
         # return a failure message
@@ -202,41 +199,49 @@ async def display_job_order() -> json:
     # return to the caller
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
-# @APP.get('/reset_job_order', status_code=200)
-# async def reset_job_order() -> json:
-#     """
-#     resets the job process order to the default.
-#
-#     The normal sequence of jobs are:
-#     staging -> hazus -> obs-mod (or obs-mod-ast) -> run adcirc to geo tiff (and/or COGs) -> compute mbtiles (and/or COGs) -> load geo server -> final staging -> complete
-#
-#     """
-#
-#     # init the returned html status code
-#     status_code = 200
-#
-#     try:
-#         # create the postgres access object
-#         pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
-#
-#         # try to make the call for records
-#         job_order = pg_db.reset_job_order()
-#
-#         # make the data readable
-#         ret_val = [x[1] for x in job_order]
-#
-#     except Exception as e:
-#         # return a failure message
-#         ret_val = f'Exception detected trying to get the job order'
-#
-#         # log the exception
-#         logger.exception(ret_val, e)
-#
-#         # set the status to a server error
-#         status_code = 500
-#
-#     # return to the caller
-#     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
+
+@APP.get('/reset_job_order', status_code=200)
+async def reset_job_order() -> json:
+    """
+    resets the job process order to the default.
+
+    The normal sequence of jobs are:
+    staging -> hazus -> obs-mod (or obs-mod-ast) -> run adcirc to geo tiff (and/or COGs) -> compute mbtiles (and/or COGs) -> load geo server -> final staging -> complete
+
+    """
+
+    # init the returned html status code
+    status_code = 200
+
+    try:
+        # create the postgres access object
+        pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password, auto_commit=False)
+
+        # try to make the call for records
+        ret_val = pg_db.reset_job_order()
+
+        # check the return value for failure, failed == true
+        if ret_val:
+            raise 'Failure trying to reset the job order'
+        else:
+            # get the new job order
+            job_order = pg_db.get_job_order()
+
+        # return a success message with the new job order
+        ret_val = [{'message': f'The job order has been reset to the default.'}, {'job_order': job_order}]
+
+    except Exception as e:
+        # return a failure message
+        ret_val = f'Exception detected trying to get the job order'
+
+        # log the exception
+        logger.exception(ret_val, e)
+
+        # set the status to a server error
+        status_code = 500
+
+    # return to the caller
+    return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
 
 @APP.get('/get_job_defs', status_code=200)
@@ -316,9 +321,11 @@ async def get_terria_map_catalog_data_file() -> FileResponse:
     Gets the terria map UI catalog data.
 
     """
-
     # init the returned html status code
     status_code = 200
+
+    # get the full file path to the dummy file
+    file_path = os.path.join(os.path.dirname(__file__), str('test_data.json'))
 
     try:
         # create the postgres access object
@@ -327,39 +334,19 @@ async def get_terria_map_catalog_data_file() -> FileResponse:
         # try to make the call for records
         ret_val = pg_db.get_terria_map_catalog_data()
 
-        # get the full file path
-        file_path = os.path.join(os.path.dirname(__file__), 'test_data.json')
-
         # write out the data to a file
         with open(file_path, 'w') as fp:
             json.dump(ret_val, fp)
 
     except Exception as e:
-        # return a failure message
-        ret_val = f'Exception detected trying to get the terria map catalog data.'
-
         # log the exception
-        logger.exception(ret_val, e)
+        logger.exception(e)
 
         # set the status to a server error
         status_code = 500
 
-        """
-        curl -X 'GET' 'http://localhost:4000/get_terria_map_data_file' -H 'accept: text/plain'
-        """
     # return to the caller
     return FileResponse(path=file_path, filename='test_data.json', media_type='text/plain')
-
-
-@APP.get("/get_log_file/")
-async def get_the_log_file(log_file_path: str = Query('log_file_path')):
-    """
-    Gets the log file specified. This method expects the full file path.
-
-    """
-
-    # return the file to the caller
-    return FileResponse(path=log_file_path, filename=os.path.basename(log_file_path), media_type='text/plain')
 
 
 @APP.get("/get_log_file_list")
@@ -371,6 +358,29 @@ async def get_the_log_file_list(request: Request):
 
     # return the list to the caller in JSON format
     return JSONResponse(content={'Response': get_log_file_list(f'{request.base_url.scheme}://{request.base_url.netloc}')}, status_code=200, media_type="application/json")
+
+
+@APP.get("/get_log_file/")
+async def get_the_log_file(log_file: str = Query('log_file')):
+    """
+    Gets the log file specified. This method only expects a properly named file.
+
+    """
+    # make sure this is a valid log file
+    if log_file.endswith('.log') or (log_file[:-2].endswith('.log') and isinstance(int(log_file[-1]), int)):
+        # append the log file to the log file path
+        log_file_path = f'{os.path.join(log_path, log_file)}'
+
+        # do some file path validation
+        if os.path.exists(log_file_path):
+            # return the file to the caller
+            return FileResponse(path=log_file_path, filename=os.path.basename(log_file_path), media_type='text/plain')
+        else:
+            # return an error
+            return JSONResponse(content={'Response': 'Error - Log file does not exist.'}, status_code=500, media_type="application/json")
+    else:
+        # return an error
+        return JSONResponse(content={'Response': 'Error - Invalid log file name.'}, status_code=500, media_type="application/json")
 
 
 @APP.get("/get_run_list", status_code=200)
@@ -445,7 +455,7 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
             status_code = 500
     else:
         # return a failure message
-        ret_val = f'Error: The instance if {instance_id} is invalid. An instance must be a non-zero integer.'
+        ret_val = f'Error: The instance id {instance_id} is invalid. An instance must be a non-zero integer.'
 
         # log the error
         logger.error(ret_val)
@@ -547,9 +557,6 @@ async def set_the_supervisor_job_order(job_type_name: JobTypeName, next_job_type
 
                 # get the new job order
                 job_order = pg_db.get_job_order()
-
-                # get the data into a better form
-                job_order = [x[1] for x in job_order]
 
                 # return a success message with the new job order
                 ret_val = [{'message': f'The {job_type_name} next process has been set to {next_job_type_name}'}, {'new_order': job_order}]
