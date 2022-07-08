@@ -6,7 +6,7 @@ from common.logger import LoggingUtil
 
 
 class PGUtils:
-    def __init__(self, dbname, username, password):
+    def __init__(self, dbname, username, password, auto_commit=True):
         # get the log level and directory from the environment.
         # level comes from the container dockerfile, path comes from the k8s secrets
         log_level: int = int(os.getenv('LOG_LEVEL', logging.INFO))
@@ -29,6 +29,7 @@ class PGUtils:
         # init the DB connection objects
         self.conn = None
         self.cursor = None
+        self.auto_commit = auto_commit
 
         # get a db connection and cursor
         self.get_db_connection()
@@ -54,8 +55,8 @@ class PGUtils:
                     # connect to the DB
                     self.conn = psycopg2.connect(self.conn_str)
 
-                    # insure records are updated immediately
-                    self.conn.autocommit = True
+                    # set the manner of commit
+                    self.conn.autocommit = self.auto_commit
 
                     # create the connection cursor
                     self.cursor = self.conn.cursor()
@@ -114,6 +115,8 @@ class PGUtils:
 
         :return:
         """
+
+        # check/terminate the DB connection and cursor
         try:
             if self.cursor is not None:
                 self.cursor.close()
@@ -123,11 +126,12 @@ class PGUtils:
         except Exception as e:
             self.logger.error(f'Error detected closing cursor or connection. {e}')
 
-    def exec_sql(self, sql_stmt):
+    def exec_sql(self, sql_stmt, is_select=True):
         """
         executes a sql statement
 
         :param sql_stmt:
+        :param is_select:
         :return:
         """
         # init the return
@@ -138,18 +142,21 @@ class PGUtils:
 
         try:
             # execute the sql
-            self.cursor.execute(sql_stmt)
+            ret_val = self.cursor.execute(sql_stmt)
 
-            # get the returned value
-            ret_val = self.cursor.fetchall()
+            # get the data
+            if is_select:
+                # get the returned value
+                ret_val = self.cursor.fetchall()
 
-            # trap the return
-            if ret_val is None or ret_val[0] is None:
-                # specify a return code on an empty result
-                ret_val = -1
+                # trap the return
+                if len(ret_val) == 0:
+                    # specify a return code on an empty result
+                    ret_val = -1
 
         except Exception as e:
             self.logger.error(f'Error detected executing SQL: {sql_stmt}. {e}')
+            ret_val = -2
 
         # return to the caller
         return ret_val
@@ -167,45 +174,52 @@ class PGUtils:
         # get the data
         return self.exec_sql(sql)[0][0]
 
-    def get_job_types(self):
-        """
-        gets the supervisor job type definitions
-
-        :return:
-        """
-
-        # create the sql
-        sql: str = 'SELECT id, name FROM public."ASGS_Mon_supervisor_job_type_lu";'
-
-        # get the data
-        return self.exec_sql(sql)
-
     def get_job_order(self):
         """
         gets the supervisor job order
 
         :return:
         """
-
         # create the sql
-        sql: str = """ WITH recursive linkedlist AS (
-                          -- start with the staging (11) record
-                          SELECT sc.*, jt1.name AS process, jt2.name AS next_process FROM public."ASGS_Mon_supervisor_config" sc
-                          JOIN public."ASGS_Mon_supervisor_job_type_lu" jt1 ON jt1.id=sc.job_type_id
-                          JOIN public."ASGS_Mon_supervisor_job_type_lu" jt2 ON jt2.id=sc.next_job_type_id
-                          WHERE sc.job_type_id = 11
-                          -- now add on the recursive records
-                          UNION
-                          SELECT n.*, jt1.name, jt2.name FROM public."ASGS_Mon_supervisor_config" n
-                          JOIN linkedlist ll ON n.job_type_id = ll.next_job_type_id
-                          JOIN public."ASGS_Mon_supervisor_job_type_lu" jt1 ON jt1.id=n.job_type_id
-                          JOIN public."ASGS_Mon_supervisor_job_type_lu" jt2 ON jt2.id=n.next_job_type_id
-                        )
-                        -- output the linked list
-                        SELECT ll.id, ll.process FROM linkedlist ll;"""
+        sql: str = 'SELECT public.get_supervisor_job_order()'
 
         # get the data
-        return self.exec_sql(sql)
+        return self.exec_sql(sql)[0][0]
+
+    def reset_job_order(self):
+        """
+        resets the supervisor job order to the default
+
+        :return:
+        """
+
+        # declare an array of 'job id, next job type id'
+        next_job_id_for_job_ids: list = [
+            '1, 12',    # -- staging step
+            '13, 25',   # -- hazus step
+            '17, 23',   # -- obs-mod ast step
+            '15, 24',   # -- adcirc to cog step
+            '16, 19',   # -- geotiff to cog step
+            '11, 20',   # -- load geo server step
+            '14, 21'    # -- final staging step
+        ]
+
+        # init the failed flag
+        failed = False
+
+        # execute each statement
+        for item in next_job_id_for_job_ids:
+            # update the record
+            ret_val = self.exec_sql(f'SELECT public.update_next_job_for_job({item})')
+
+            # anything other than a list returned is an error
+            if not isinstance(ret_val, list):
+                failed = True
+                break
+
+        # if there were no errors, commit the updates
+        if not failed:
+            self.conn.commit()
 
     def get_terria_map_catalog_data(self):
         """
@@ -228,26 +242,10 @@ class PGUtils:
         """
 
         # create the sql
-        sql: str = """
-                        SELECT json_agg(runs)
-                        FROM
-                        (
-                            SELECT DISTINCT 
-                                id, instance_id, uid, value AS status
-                            FROM 
-                                public."ASGS_Mon_config_item"
-                            WHERE 
-                                KEY IN ('supervisor_job_status')
-                                AND instance_id IN (SELECT id FROM public."ASGS_Mon_instance" ORDER BY id DESC)
-                            ORDER BY 
-                                instance_id DESC, id DESC 
-                            LIMIT 100
-                        ) runs;"""
+        sql: str = 'SELECT public.get_supervisor_run_list()'
 
-        data = self.exec_sql(sql)[0][0]
-
-        # get the data
-        return data
+        # return the data
+        return self.exec_sql(sql)[0][0]
 
     def update_next_job_for_job(self, job_name: str, next_process_id: int):
         """
