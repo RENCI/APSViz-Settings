@@ -232,7 +232,7 @@ class PGUtils:
         sql: str = 'SELECT public.get_terria_data_json()'
 
         # get the data
-        return self.exec_sql(sql)
+        return self.exec_sql(sql)[0][0]
 
     def get_run_list(self):
         """
