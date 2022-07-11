@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2022 Renaissance Computing Institute. All rights reserved.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: LicenseRef-RENCI
+# SPDX-License-Identifier: MIT
+
 # This Dockerfile is used to build THE APSVIZ-Settings python image
 # starts with the python image
 # creates a directory for the repo
