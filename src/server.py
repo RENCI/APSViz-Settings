@@ -62,6 +62,7 @@ APP.add_middleware(
 # declare the job type names
 class JobTypeName(str, Enum):
     adcirc2cog_tiff_job = 'adcirc2cog-tiff-job'
+    adcirctime_to_cog_job = 'adcirctime-to-cog-job'
     compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
     compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
     compute_mbtiles_job_12 = 'compute-mbtiles-job-12'
@@ -79,6 +80,7 @@ class JobTypeName(str, Enum):
 # declare the job type names
 class NextJobTypeName(str, Enum):
     adcirc2cog_tiff_job = 'adcirc2cog-tiff-job'
+    adcirctime_to_cog_job = 'adcirctime-to-cog-job'
     complete = 'complete'
     compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
     compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
@@ -105,6 +107,7 @@ class RunStatus(str, Enum):
 # declare the component job type image name
 job_type_to_image_name: dict = {
     'adcirc2cog-tiff-job': 'renciorg/adcirc2cog:',
+    'adcirctime-to-cog-job': 'renciorg/adcirctime2cogs:',
     'compute-mbtiles-job-0-10': 'renciorg/adcirc2mbtiles:',
     'compute-mbtiles-job-11': 'renciorg/adcirc2mbtiles:',
     'compute-mbtiles-job-12': 'renciorg/adcirc2mbtiles:',
@@ -122,6 +125,7 @@ job_type_to_image_name: dict = {
 # declare job name to id
 job_type_name_to_id: dict = {
   "adcirc2cog-tiff-job": 23,
+  'adcirctime-to-cog-job': 26,
   "complete": 21,
   "compute-mbtiles-job-0-10": 16,
   "compute-mbtiles-job-11": 17,
