@@ -55,7 +55,7 @@ APP.add_middleware(
     allow_origins=['*'],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
 
 
@@ -201,7 +201,7 @@ async def display_job_order() -> json:
         ret_val = f'Exception detected trying to get the job order'
 
         # log the exception
-        logger.exception(ret_val, e)
+        logger.exception(ret_val)
 
         # set the status to a server error
         status_code = 500
@@ -245,7 +245,7 @@ async def reset_job_order() -> json:
         ret_val = f'Exception detected trying to get the job order'
 
         # log the exception
-        logger.exception(ret_val, e)
+        logger.exception(ret_val)
 
         # set the status to a server error
         status_code = 500
@@ -285,7 +285,7 @@ async def display_job_definitions() -> json:
         ret_val = f'Exception detected trying to get the job definitions'
 
         # log the exception
-        logger.exception(ret_val, e)
+        logger.exception(ret_val)
 
         # set the status to a server error
         status_code = 500
@@ -316,7 +316,7 @@ async def get_terria_map_catalog_data() -> json:
         ret_val = f'Exception detected trying to get the terria map catalog data.'
 
         # log the exception
-        logger.exception(ret_val, e)
+        logger.exception(ret_val)
 
         # set the status to a server error
         status_code = 500
@@ -422,7 +422,7 @@ async def get_the_run_list():
         ret_val = f'Exception detected trying to gather run data'
 
         # log the exception
-        logger.exception(ret_val, e)
+        logger.exception(ret_val)
 
         # set the status to a server error
         status_code = 500
@@ -459,7 +459,7 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
             ret_val = f'Exception detected trying to update run {instance_id}/{uid} to {status}'
 
             # log the exception
-            logger.exception(ret_val, e)
+            logger.exception(ret_val)
 
             # set the status to a server error
             status_code = 500
@@ -519,7 +519,7 @@ async def set_the_supervisor_component_image_version(job_type_name: JobTypeName,
         ret_val = f'Exception detected trying to update the image version {job_type_name} to version {version}'
 
         # log the exception
-        logger.exception(ret_val, e)
+        logger.exception(ret_val)
 
         # set the status to a server error
         status_code = 500
@@ -582,7 +582,7 @@ async def set_the_supervisor_job_order(job_type_name: JobTypeName, next_job_type
         ret_val = f'Exception detected trying to update the next job name. Job name {job_type_name}, next job name: {next_job_type_name}'
 
         # log the exception
-        logger.exception(ret_val, e)
+        logger.exception(ret_val)
 
         # set the status to a server error
         status_code = 500
