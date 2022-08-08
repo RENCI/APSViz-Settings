@@ -515,7 +515,7 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
             pg_db.update_job_image_version(JobTypeName(job_type_name).value + '-', image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version)
 
             # return a success message
-            ret_val = f'The docker repo/image:version for job name {job_type_name} has been set to {job_type_to_image_name[job_type_name] + version}'
+            ret_val = f'The docker repo/image:version for job name {job_type_name} has been set to {image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version}'
         else:
             # return a success message
             ret_val = f'Error: The version {version} is invalid. Please use a value in the form of v<int>.<int>.<int>'
