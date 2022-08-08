@@ -19,7 +19,7 @@ from common.logger import LoggingUtil
 from src.pg_utils import PGUtils
 
 # set the app version
-APP_VERSION = 'v0.0.11'
+APP_VERSION = 'v0.0.12'
 
 # get the log level and directory from the environment.
 # level comes from the container dockerfile, path comes from the k8s secrets
@@ -104,22 +104,33 @@ class RunStatus(str, Enum):
     do_not_rerun = 'do not rerun'
 
 
+# declare the possible image repos
+class ImageRepo(str, Enum):
+    containers = 'containers.renci.org'
+    renciorg = 'renciorg'
+
+
+image_repo_to_repo_name: dict = {
+    'renciorg': 'renciorg',
+    'containers.renci.org': 'containers.renci.org/eds'
+}
+
 # declare the component job type image name
 job_type_to_image_name: dict = {
-    'adcirc2cog-tiff-job': 'renciorg/adcirc2cog:',
-    'adcirctime-to-cog-job': 'renciorg/adcirctime2cogs:',
-    'compute-mbtiles-job-0-10': 'renciorg/adcirc2mbtiles:',
-    'compute-mbtiles-job-11': 'renciorg/adcirc2mbtiles:',
-    'compute-mbtiles-job-12': 'renciorg/adcirc2mbtiles:',
-    'final-staging-job': 'renciorg/stagedata:',
-    'geotiff2cog-job': 'renciorg/adcirc2cog:',
-    'hazus': 'renciorg/adras:',
-    'hazus-singleton': 'renciorg/adras:',
-    'load-geo-server-job': 'renciorg/load_geoserver:',
-    'obs-mod-ast-job': 'renciorg/ast_supp:',
-    'obs-mod-supp-job': 'renciorg/adcirc_supp:',
-    'run-geo-tiff-job': 'renciorg/adcirc2mbtiles:',
-    'staging': 'renciorg/stagedata:'
+    'adcirc2cog-tiff-job': '/adcirc2cog:',
+    'adcirctime-to-cog-job': '/adcirctime2cogs:',
+    'compute-mbtiles-job-0-10': '/adcirc2mbtiles:',
+    'compute-mbtiles-job-11': '/adcirc2mbtiles:',
+    'compute-mbtiles-job-12': '/adcirc2mbtiles:',
+    'final-staging-job': '/stagedata:',
+    'geotiff2cog-job': '/adcirc2cog:',
+    'hazus': '/adras:',
+    'hazus-singleton': '/adras:',
+    'load-geo-server-job': '/load_geoserver:',
+    'obs-mod-ast-job': '/ast_supp:',
+    'obs-mod-supp-job': '/adcirc_supp:',
+    'run-geo-tiff-job': '/adcirc2mbtiles:',
+    'staging': '/stagedata:'
 }
 
 # declare job name to id
@@ -478,13 +489,14 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
 
 
 # Updates the image version for a job
-@APP.put('/job_type_name/{job_type_name}/image_version/{version}', status_code=200)
-async def set_the_supervisor_component_image_version(job_type_name: JobTypeName, version: str):
+@APP.put('/image_repo/{image_repo}/job_type_name/{job_type_name}/image_version/{version}', status_code=200)
+async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_type_name: JobTypeName, version: str):
     """
     Updates a supervisor component image version label in the supervisor job run configuration.
 
     Notes:
-     - The version label must match what has been uploaded to docker hub
+     - Please must select the image repository that houses your container image.
+     - The version label must match what has been uploaded to docker hub.
 
     """
     # init the returned html status code
@@ -492,18 +504,18 @@ async def set_the_supervisor_component_image_version(job_type_name: JobTypeName,
 
     try:
         # create a regex pattern for the version number
-        pattern = re.compile(r"(v\d\.+\d\.+\d)")
+        version_pattern = re.compile(r"(v\d\.+\d\.+\d)")
 
         # makesure that the input params are legit
-        if pattern.search(version):
+        if version_pattern.search(version):
             # create the postgres access object
             pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
 
             # make the update. fix the job name (hyphen) so it matches the DB format
-            pg_db.update_job_image_version(JobTypeName(job_type_name).value + '-', job_type_to_image_name[job_type_name] + version)
+            pg_db.update_job_image_version(JobTypeName(job_type_name).value + '-', image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version)
 
             # return a success message
-            ret_val = f'The docker image:version for job name {job_type_name} has been set to {job_type_to_image_name[job_type_name] + version}'
+            ret_val = f'The docker repo/image:version for job name {job_type_name} has been set to {job_type_to_image_name[job_type_name] + version}'
         else:
             # return a success message
             ret_val = f'Error: The version {version} is invalid. Please use a value in the form of v<int>.<int>.<int>'
