@@ -336,8 +336,8 @@ async def get_terria_map_catalog_data() -> json:
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
 
-@APP.get('/get_terria_map_data_file', status_code=200)
-async def get_terria_map_catalog_data_file(file_name: str = Query('file_name')) -> FileResponse:
+@APP.get('/get_terria_map_data_file/{file_name}', status_code=200)
+async def get_terria_map_catalog_data_file(file_name: str) -> FileResponse:
     """
     Returns the terria map UI catalog data in a file specified. This method only expects a properly named file.
 
