@@ -337,16 +337,16 @@ async def get_terria_map_catalog_data() -> json:
 
 
 @APP.get('/get_terria_map_data_file', status_code=200)
-async def get_terria_map_catalog_data_file() -> FileResponse:
+async def get_terria_map_catalog_data_file(file_name: str = Query('file_name')) -> FileResponse:
     """
-    Gets the terria map UI catalog data.
+    Returns the terria map UI catalog data in a file specified. This method only expects a properly named file.
 
     """
     # init the returned html status code
     status_code = 200
 
     # get the full file path to the dummy file
-    file_path = os.path.join(os.path.dirname(__file__), str('test_data.json'))
+    file_path = os.path.join(os.path.dirname(__file__), file_name)
 
     try:
         # create the postgres access object
@@ -367,7 +367,7 @@ async def get_terria_map_catalog_data_file() -> FileResponse:
         status_code = 500
 
     # return to the caller
-    return FileResponse(path=file_path, filename='test_data.json', media_type='text/plain')
+    return FileResponse(path=file_path, filename=file_name, media_type='text/json')
 
 
 @APP.get("/get_log_file_list")
