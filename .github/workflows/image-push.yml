@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: LicenseRef-RENCI
 # SPDX-License-Identifier: MIT
 
-name: Create and publish the APSVIZ k8s Supervisor Docker image tagged with "latest" and version number
+name: Create and publish the APSVIZ Supervisor settings Docker image tagged with "latest" and version number
 
 # trigger event is publishing the repo
 on:
