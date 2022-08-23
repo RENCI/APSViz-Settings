@@ -9,7 +9,9 @@ import json
 import logging
 import os
 import re
+
 from enum import Enum
+from typing import Union
 
 from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -306,10 +308,19 @@ async def display_job_definitions() -> json:
 
 
 @APP.get('/get_terria_map_data', status_code=200)
-async def get_terria_map_catalog_data() -> json:
+async def get_terria_map_catalog_data(grid_type: Union[str, None] = Query(default=None),
+                                      event_type: Union[str, None] = Query(default=None),
+                                      instance_name: Union[str, None] = Query(default=None),
+                                      run_date: Union[str, None] = Query(default=None),
+                                      limit: Union[int, None] = Query(default=2)) -> json:
     """
-    Gets the terria map UI catalog data.
-
+    Gets the json formatted terria map UI catalog data.
+    <br/>Note: Leave filtering params empty if not desired.
+    <br/>&nbsp;&nbsp;&nbsp;grid_type: Filter by the name of the ASGS grid
+    <br/>&nbsp;&nbsp;&nbsp;event_type: Filter by the event type
+    <br/>&nbsp;&nbsp;&nbsp;instance_name: Filter by the name of the ASGS instance
+    <br/>&nbsp;&nbsp;&nbsp;run_date: Filter by the run date in the form of yyyy-mm-dd
+    <br/>&nbsp;&nbsp;&nbsp;limit: Limit the number of catalog records returned (default is 2)
     """
 
     # init the returned html status code
@@ -319,9 +330,14 @@ async def get_terria_map_catalog_data() -> json:
         # create the postgres access object
         pg_db = PGUtils(apsviz_dbname, apsviz_username, apsviz_password)
 
-        # try to make the call for records
-        ret_val = pg_db.get_terria_map_catalog_data()
+        # prep the data for the DB SP
+        grid_type = 'null' if not grid_type else f"'{grid_type}'"
+        event_type = 'null' if not event_type else f"'{event_type}'"
+        instance_name = 'null' if not instance_name else f"'{instance_name}'"
+        run_date = 'null' if not run_date else f"'{run_date}'"
 
+        # try to make the call for records
+        ret_val = pg_db.get_terria_map_catalog_data(grid_type, event_type, instance_name, run_date, limit)
     except Exception as e:
         # return a failure message
         ret_val = f'Exception detected trying to get the terria map catalog data.'
@@ -336,11 +352,22 @@ async def get_terria_map_catalog_data() -> json:
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
 
-@APP.get('/get_terria_map_data_file/{file_name}', status_code=200)
-async def get_terria_map_catalog_data_file(file_name: str) -> FileResponse:
+@APP.get('/get_terria_map_data_file', status_code=200)
+async def get_terria_map_catalog_data_file(file_name: Union[str, None] = Query(default='apsviz.json'),
+                                           grid_type: Union[str, None] = Query(default=None),
+                                           event_type: Union[str, None] = Query(default=None),
+                                           instance_name: Union[str, None] = Query(default=None),
+                                           run_date: Union[str, None] = Query(default=None),
+                                           limit: Union[int, None] = Query(default=2)) -> FileResponse:
     """
-    Returns the terria map UI catalog data in a file specified. This method only expects a properly named file.
-
+    Returns the json formatted terria map UI catalog data in a file specified.
+    <br/>Note: Leave filtering params empty if not desired.
+    <br/>&nbsp;&nbsp;&nbsp;file_name: The name of the output file (default is apsviz.json)
+    <br/>&nbsp;&nbsp;&nbsp;grid_type: Filter by the name of the ASGS grid
+    <br/>&nbsp;&nbsp;&nbsp;event_type: Filter by the event type
+    <br/>&nbsp;&nbsp;&nbsp;instance_name: Filter by the name of the ASGS instance
+    <br/>&nbsp;&nbsp;&nbsp;run_date: Filter by the run date in the form of yyyy-mm-dd
+    <br/>&nbsp;&nbsp;&nbsp;limit: Limit the number of catalog records returned (default is 2)
     """
     # init the returned html status code
     status_code = 200
@@ -348,12 +375,18 @@ async def get_terria_map_catalog_data_file(file_name: str) -> FileResponse:
     # get the full file path to the dummy file
     file_path = os.path.join(os.path.dirname(__file__), file_name)
 
+    # prep the data for the DB SP
+    grid_type = 'null' if not grid_type else f"'{grid_type}'"
+    event_type = 'null' if not event_type else f"'{event_type}'"
+    instance_name = 'null' if not instance_name else f"'{instance_name}'"
+    run_date = 'null' if not run_date else f"'{run_date}'"
+
     try:
         # create the postgres access object
         pg_db = PGUtils(apsviz_dbname, apsviz_username, apsviz_password)
 
         # try to make the call for records
-        ret_val = pg_db.get_terria_map_catalog_data()
+        ret_val = pg_db.get_terria_map_catalog_data(grid_type, event_type, instance_name, run_date, limit)
 
         # write out the data to a file
         with open(file_path, 'w') as fp:
