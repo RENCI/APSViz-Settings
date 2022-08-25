@@ -216,15 +216,15 @@ class PGUtils:
         ]
 
         # previous version of job order
-        # # declare an array of 'job id, next job type id'
+        # declare an array of 'job id, next job type id'
         # next_job_id_for_job_ids: list = [
         #     '1, 12',    # staging step
         #     '13, 14',   # hazus step
-        #     '17, 23',   # obs-mod-supp step
-        #     '4, 16',    # run-geo-tiff
-        #     '5, 23',    # compute-mbtiles-0-10
-        #     '6, 23',    # compute-mbtiles-11
-        #     '7, 23',    # compute-mbtiles-12
+        # no longer used    '17, 23',   # obs-mod supp step
+        # no longer used    '4, 16',    # run-geo-tiff
+        # no longer used    '5, 23',    # compute-mbtiles-0-10
+        # no longer used    '6, 23',    # compute-mbtiles-11
+        # no longer used    '7, 23',    # compute-mbtiles-12
         #     '15, 24'    # adcirc to cog step
         #     '16, 19'    # geotiff to cog step
         #     '11, 20',   # load geo server step

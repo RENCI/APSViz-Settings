@@ -65,17 +65,17 @@ APP.add_middleware(
 class JobTypeName(str, Enum):
     adcirc2cog_tiff_job = 'adcirc2cog-tiff-job'
     adcirctime_to_cog_job = 'adcirctime-to-cog-job'
-    compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
-    compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
-    compute_mbtiles_job_12 = 'compute-mbtiles-job-12'
+    # compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
+    # compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
+    # compute_mbtiles_job_12 = 'compute-mbtiles-job-12'
     final_staging_job = 'final-staging-job'
     geotiff2cog_job = 'geotiff2cog-job'
     hazus = 'hazus'
-    hazus_singleton = 'hazus-singleton'
+    # hazus_singleton = 'hazus-singleton'
     load_geo_server_job = 'load-geo-server-job'
     obs_mod_ast_job = 'obs-mod-ast-job'
-    obs_mod_supp_job = 'obs-mod-supp-job'
-    run_geo_tiff_job = 'run-geo-tiff-job'
+    # obs_mod_supp_job = 'obs-mod-supp-job'
+    # run_geo_tiff_job = 'run-geo-tiff-job'
     staging = 'staging'
 
 
@@ -84,17 +84,17 @@ class NextJobTypeName(str, Enum):
     adcirc2cog_tiff_job = 'adcirc2cog-tiff-job'
     adcirctime_to_cog_job = 'adcirctime-to-cog-job'
     complete = 'complete'
-    compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
-    compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
-    compute_mbtiles_job_12 = 'compute-mbtiles-job-12'
+    # compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
+    # compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
+    # compute_mbtiles_job_12 = 'compute-mbtiles-job-12'
     final_staging_job = 'final-staging-job'
     geotiff2cog_job = 'geotiff2cog-job'
     hazus = 'hazus'
-    hazus_singleton = 'hazus-singleton'
+    # hazus_singleton = 'hazus-singleton'
     load_geo_server_job = 'load-geo-server-job'
     obs_mod_ast_job = 'obs-mod-ast-job'
-    obs_mod_supp_job = 'obs-mod-supp-job'
-    run_geo_tiff_job = 'run-geo-tiff-job'
+    # obs_mod_supp_job = 'obs-mod-supp-job'
+    # run_geo_tiff_job = 'run-geo-tiff-job'
     staging = 'staging'
 
 
@@ -102,7 +102,6 @@ class NextJobTypeName(str, Enum):
 class RunStatus(str, Enum):
     new = 'new'
     debug = 'debug'
-    hazus = 'hazus'
     do_not_rerun = 'do not rerun'
 
 
@@ -121,17 +120,17 @@ image_repo_to_repo_name: dict = {
 job_type_to_image_name: dict = {
     'adcirc2cog-tiff-job': '/adcirc2cog:',
     'adcirctime-to-cog-job': '/adcirctime2cogs:',
-    'compute-mbtiles-job-0-10': '/adcirc2mbtiles:',
-    'compute-mbtiles-job-11': '/adcirc2mbtiles:',
-    'compute-mbtiles-job-12': '/adcirc2mbtiles:',
+    # 'compute-mbtiles-job-0-10': '/adcirc2mbtiles:',
+    # 'compute-mbtiles-job-11': '/adcirc2mbtiles:',
+    # 'compute-mbtiles-job-12': '/adcirc2mbtiles:',
     'final-staging-job': '/stagedata:',
     'geotiff2cog-job': '/adcirc2cog:',
     'hazus': '/adras:',
-    'hazus-singleton': '/adras:',
+    # 'hazus-singleton': '/adras:',
     'load-geo-server-job': '/load_geoserver:',
     'obs-mod-ast-job': '/ast_supp:',
-    'obs-mod-supp-job': '/adcirc_supp:',
-    'run-geo-tiff-job': '/adcirc2mbtiles:',
+    # 'obs-mod-supp-job': '/adcirc_supp:',
+    # 'run-geo-tiff-job': '/adcirc2mbtiles:',
     'staging': '/stagedata:'
 }
 
@@ -140,17 +139,17 @@ job_type_name_to_id: dict = {
   "adcirc2cog-tiff-job": 23,
   'adcirctime-to-cog-job': 26,
   "complete": 21,
-  "compute-mbtiles-job-0-10": 16,
-  "compute-mbtiles-job-11": 17,
-  "compute-mbtiles-job-12": 18,
+  # "compute-mbtiles-job-0-10": 16,
+  # "compute-mbtiles-job-11": 17,
+  # "compute-mbtiles-job-12": 18,
   "final-staging-job": 20,
   "geotiff2cog-job": 24,
   "hazus": 12,
-  "hazus-singleton": 13,
+  # "hazus-singleton": 13,
   "load-geo-server-job": 19,
   "obs-mod-ast-job": 25,
-  "obs-mod-supp-job": 14,
-  "run-geo-tiff-job": 15,
+  # "obs-mod-supp-job": 14,
+  # "run-geo-tiff-job": 15,
   "staging": 11
 }
 
@@ -229,7 +228,7 @@ async def reset_job_order() -> json:
     resets the job process order to the default.
 
     The normal sequence of jobs are:
-    staging -> hazus -> obs-mod (or obs-mod-ast) -> run adcirc to geo tiff (and/or COGs) -> compute mbtiles (and/or COGs) -> load geo server -> final staging -> complete
+    staging -> hazus -> obs-mod-ast -> adcirc to COGs -> compute COGs -> load geo server -> final staging -> complete
 
     """
 
@@ -580,7 +579,7 @@ async def set_the_supervisor_job_order(job_type_name: JobTypeName, next_job_type
     Modifies the supervisor component's linked list of jobs. Select the job process name and then select it's next job process name.
 
     The normal sequence of jobs are:
-    staging -> hazus -> obs-mod (or obs-mod-ast) -> run adcirc to geo tiff (and/or COGs) -> compute mbtiles (and/or COGs) -> load geo server -> final staging -> complete
+    staging -> hazus -> obs-mod-ast -> adcirc to COGs -> compute COGs -> load geo server -> final staging -> complete
     """
     # init the returned html status code
     status_code = 200
