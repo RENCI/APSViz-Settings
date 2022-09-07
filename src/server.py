@@ -66,17 +66,11 @@ class JobTypeName(str, Enum):
     adcirc2cog_tiff_job = 'adcirc2cog-tiff-job'
     adcirctime_to_cog_job = 'adcirctime-to-cog-job'
     ast_run_harvester_job = 'ast-run-harvester-job'
-    # compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
-    # compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
-    # compute_mbtiles_job_12 = 'compute-mbtiles-job-12'
     final_staging_job = 'final-staging-job'
     geotiff2cog_job = 'geotiff2cog-job'
     hazus = 'hazus'
-    # hazus_singleton = 'hazus-singleton'
     load_geo_server_job = 'load-geo-server-job'
     obs_mod_ast_job = 'obs-mod-ast-job'
-    # obs_mod_supp_job = 'obs-mod-supp-job'
-    # run_geo_tiff_job = 'run-geo-tiff-job'
     staging = 'staging'
 
 
@@ -86,17 +80,11 @@ class NextJobTypeName(str, Enum):
     adcirctime_to_cog_job = 'adcirctime-to-cog-job'
     ast_run_harvester_job = 'ast-run-harvester-job'
     complete = 'complete'
-    # compute_mbtiles_job_0_10 = 'compute-mbtiles-job-0-10'
-    # compute_mbtiles_job_11 = 'compute-mbtiles-job-11'
-    # compute_mbtiles_job_12 = 'compute-mbtiles-job-12'
     final_staging_job = 'final-staging-job'
     geotiff2cog_job = 'geotiff2cog-job'
     hazus = 'hazus'
-    # hazus_singleton = 'hazus-singleton'
     load_geo_server_job = 'load-geo-server-job'
     obs_mod_ast_job = 'obs-mod-ast-job'
-    # obs_mod_supp_job = 'obs-mod-supp-job'
-    # run_geo_tiff_job = 'run-geo-tiff-job'
     staging = 'staging'
 
 
@@ -123,17 +111,11 @@ job_type_to_image_name: dict = {
     'adcirc2cog-tiff-job': '/adcirc2cog:',
     'adcirctime-to-cog-job': '/adcirctime2cogs:',
     'ast-run-harvester-job': '/ast_run_harvester',
-    # 'compute-mbtiles-job-0-10': '/adcirc2mbtiles:',
-    # 'compute-mbtiles-job-11': '/adcirc2mbtiles:',
-    # 'compute-mbtiles-job-12': '/adcirc2mbtiles:',
     'final-staging-job': '/stagedata:',
     'geotiff2cog-job': '/adcirc2cog:',
     'hazus': '/adras:',
-    # 'hazus-singleton': '/adras:',
     'load-geo-server-job': '/load_geoserver:',
     'obs-mod-ast-job': '/ast_supp:',
-    # 'obs-mod-supp-job': '/adcirc_supp:',
-    # 'run-geo-tiff-job': '/adcirc2mbtiles:',
     'staging': '/stagedata:'
 }
 
@@ -143,17 +125,11 @@ job_type_name_to_id: dict = {
   'adcirctime-to-cog-job': 26,
   'ast-run-harvester-job': 27,
   "complete": 21,
-  # "compute-mbtiles-job-0-10": 16,
-  # "compute-mbtiles-job-11": 17,
-  # "compute-mbtiles-job-12": 18,
   "final-staging-job": 20,
   "geotiff2cog-job": 24,
   "hazus": 12,
-  # "hazus-singleton": 13,
   "load-geo-server-job": 19,
   "obs-mod-ast-job": 25,
-  # "obs-mod-supp-job": 14,
-  # "run-geo-tiff-job": 15,
   "staging": 11
 }
 
@@ -295,6 +271,7 @@ async def display_job_definitions() -> json:
         for item in ret_val.items():
             item[1]['COMMAND_LINE'] = json.loads(item[1]['COMMAND_LINE'])
             item[1]['COMMAND_MATRIX'] = json.loads(item[1]['COMMAND_MATRIX'])
+            item[1]['PARALLEL'] = json.loads(item[1]['PARALLEL']) if item[1]['PARALLEL'] is not None else None
 
     except Exception as e:
         # return a failure message
