@@ -30,7 +30,15 @@ jobs:
           registry: containers.renci.org
           username: ${{ secrets.USER }}
           password: ${{ secrets.PW }}
-          
+      
+      - name: Set up Python 3.9.13
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9.13      
+      
+      - name: Chackout code
+        uses: actions/checkout@v1
+        
       - name: Install Requirements
         run: |
           python -m pip install --upgrade pip
