@@ -42,7 +42,8 @@ jobs:
 
       - name: Install Requirements
         run: |
-          echo "$PWD"
+          echo "current directory: $PWD, listing as follows:"
+          ls -al
           python -m pip install --upgrade pip
           pip3 install -r requirements.txt
           pip install pylint
