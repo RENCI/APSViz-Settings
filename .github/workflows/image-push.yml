@@ -25,8 +25,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
-      - run: pip3 install pip setuptools
-      - run: pip3 install -r requirements.txt
+      - run: pip3 install -U pip setuptools
+      - run: pip3 install -U -r requirements.txt
       - run: pylint --max-line-length=150 --disable=broad-except --max-args=7 --min-public-methods=0 --recursive=y ./
 
   build-and-push-image:
