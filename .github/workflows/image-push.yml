@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-python@v2
       - run: pip3 install pip setuptools
       - run: pip3 install -r requirements.txt
-      - run: pylint --msg-template=./{path}:{line}:{column}:{C}:({symbol}){msg} --max-line-length=150 --disable=broad-except --max-args=7 --min-public-methods=0 --recursive=y ./
+      - run: pylint --max-line-length=150 --disable=broad-except --max-args=7 --min-public-methods=0 --recursive=y ./
 
   build-and-push-image:
     runs-on: ubuntu-latest
