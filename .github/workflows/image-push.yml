@@ -36,21 +36,9 @@ jobs:
 
       # get python installed
       - name: Set up Python 3.9.13
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: 3.9.13
-
-      - name: Install Requirements
-        run: |
-          echo "current directory: $PWD, listing as follows:"
-          ls -al
-          python -m pip install --upgrade pip
-          pip3 install -r requirements.txt
-          pip install pylint
-
-      - name: Run Pylint
-        run: |
-          python lint.py --msg-template ./{path}:{line}:{column}:{C}:({symbol}){msg} --rcfile .pylintrc --recursive y --path ./
 
       # get the tag for the image
       - name: Get the version
@@ -66,3 +54,14 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}:latest
             ${{ env.REGISTRY }}:${{ steps.get_version.outputs.VERSION }}
+
+    linting:
+        name: PyLint
+        runs-on: ubuntu-latest
+        needs: install
+        steps:
+          - uses: actions/checkout@v2
+          - uses: actions/setup-python@v2
+          - run: pip3 install -U pip setuptools
+          - run: pip3 install -U -r requirements.txt
+          - run: pylint --msg-template={path}:{line}:{column}:{C}:({symbol}){msg} --rcfile=.pylintrc --recursive=y ./
