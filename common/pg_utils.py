@@ -4,26 +4,24 @@
 # SPDX-License-Identifier: LicenseRef-RENCI
 # SPDX-License-Identifier: MIT
 
+"""
+    Class to encapsulate database activities
+"""
+
 import os
-import psycopg2
-import logging
 import time
+import psycopg2
 from common.logger import LoggingUtil
 
 
 class PGUtils:
+    """
+    Methods to perform database activities
+    """
+
     def __init__(self, dbname, username, password, auto_commit=True):
-        # get the log level and directory from the environment.
-        # level comes from the container dockerfile, path comes from the k8s secrets
-        log_level: int = int(os.getenv('LOG_LEVEL', logging.INFO))
-        log_path: str = os.getenv('LOG_PATH', os.path.dirname(__file__))
-
-        # create the dir if it does not exist
-        if not os.path.exists(log_path):
-            os.mkdir(log_path)
-
         # create a logger
-        self.logger = LoggingUtil.init_logging("APSVIZ.Settings.pg_utils", level=log_level, line_format='medium', log_file_path=log_path)
+        self.logger = LoggingUtil.init_logging("APSVIZ.Settings.pg_utils", line_format='medium')
 
         # get configuration params from the pods secrets
         host = os.environ.get('ASGS_DB_HOST')
@@ -80,7 +78,7 @@ class PGUtils:
             except (Exception, psycopg2.DatabaseError):
                 good_conn = False
 
-            self.logger.error(f'DB Connection failed. Retrying...')
+            self.logger.error('DB Connection failed. Retrying...')
             time.sleep(5)
 
     def check_db_connection(self) -> bool:
@@ -129,8 +127,8 @@ class PGUtils:
 
             if self.conn is not None:
                 self.conn.close()
-        except Exception as e:
-            self.logger.error(f'Error detected closing cursor or connection. {e}')
+        except Exception:
+            self.logger.exception('Error detected closing cursor or connection.')
 
     def exec_sql(self, sql_stmt, is_select=True):
         """
@@ -160,8 +158,8 @@ class PGUtils:
                     # specify a return code on an empty result
                     ret_val = -1
 
-        except Exception as e:
-            self.logger.error(f'Error detected executing SQL: {sql_stmt}. {e}')
+        except Exception:
+            self.logger.exception('Error detected executing SQL: %s.', sql_stmt)
             ret_val = -2
 
         # return to the caller
@@ -192,47 +190,27 @@ class PGUtils:
         # get the data
         return self.exec_sql(sql)[0][0]
 
-    def reset_job_order(self):
+    def reset_job_order(self) -> bool:
         """
         resets the supervisor job order to the default
 
         :return:
         """
 
-        # get the environment this instance is running on
-        system = os.getenv('SYSTEM', 'System name not set')
-
         # declare an array of the job id and next job type id in sequence
-        next_job_id_for_job_ids: list = [
-            # record id, next job type
+        next_job_id_for_job_ids: list = [  # record id, next job type
             # -------------------------
-            '1, 12',    # staging step
-            '13, 25',   # hazus step
-            '17, 23',   # obs-mod ast step
-            '15, 24',   # adcirc to cog step
-            '16, 19',   # geotiff to cog step
-            '11, 20',   # load geo server step
-            '14, 21'    # final staging step
-        ]
-
-        # previous version of job order
-        # declare an array of 'job id, next job type id'
-        # next_job_id_for_job_ids: list = [
-        #     '1, 12',    # staging step
-        #     '13, 14',   # hazus step
-        # no longer used    '17, 23',   # obs-mod supp step
-        # no longer used    '4, 16',    # run-geo-tiff
-        # no longer used    '5, 23',    # compute-mbtiles-0-10
-        # no longer used    '6, 23',    # compute-mbtiles-11
-        # no longer used    '7, 23',    # compute-mbtiles-12
-        #     '15, 24'    # adcirc to cog step
-        #     '16, 19'    # geotiff to cog step
-        #     '11, 20',   # load geo server step
-        #     '14, 21'    # final staging step
-        # ]
+            '1, 12',  # staging step
+            '13, 25',  # hazus step
+            '17, 23',  # obs-mod ast step
+            '15, 24',  # adcirc to cog step
+            '16, 19',  # geotiff to cog step
+            '11, 20',  # load geo server step
+            '14, 21'  # final staging step
+            ]
 
         # init the failed flag
-        failed = False
+        failed: bool = False
 
         # execute each statement
         for item in next_job_id_for_job_ids:
@@ -248,15 +226,19 @@ class PGUtils:
         if not failed:
             self.conn.commit()
 
-    def get_terria_map_catalog_data(self, grid_type, event_type, instance_name, run_date, end_date, limit):
+        # return to the caller
+        return failed
+
+    def get_terria_map_catalog_data(self, **kwargs):
         """
         gets the catalog data for the terria map UI
 
         :return:
         """
-
         # create the sql
-        sql: str = f'SELECT public.get_terria_data_json(_grid_type:={grid_type}, _event_type:={event_type}, _instance_name:={instance_name}, _run_date:={run_date}, _end_date:={end_date}, _limit:={limit})'
+        sql: str = f"SELECT public.get_terria_data_json(_grid_type:={kwargs['grid_type']}, _event_type:={kwargs['event_type']}, " \
+                   f"_instance_name:={kwargs['instance_name']}, _run_date:={kwargs['run_date']}, _end_date:={kwargs['end_date']}, " \
+                   f"_limit:={kwargs['limit']})"
 
         # get the data
         return self.exec_sql(sql)[0][0]
