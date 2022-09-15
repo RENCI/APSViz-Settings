@@ -56,12 +56,12 @@ jobs:
             ${{ env.REGISTRY }}:${{ steps.get_version.outputs.VERSION }}
 
     linting:
-        name: PyLint
-        runs-on: ubuntu-latest
-        needs: install
-        steps:
-          - uses: actions/checkout@v2
-          - uses: actions/setup-python@v2
-          - run: pip3 install -U pip setuptools
-          - run: pip3 install -U -r requirements.txt
-          - run: pylint --msg-template={path}:{line}:{column}:{C}:({symbol}){msg} --rcfile=.pylintrc --recursive=y ./
+      name: PyLint
+      runs-on: ubuntu-latest
+      needs: install
+      steps:
+        - uses: actions/checkout@v2
+        - uses: actions/setup-python@v2
+        - run: pip3 install -U pip setuptools
+        - run: pip3 install -U -r requirements.txt
+        - run: pylint --msg-template={path}:{line}:{column}:{C}:({symbol}){msg} --rcfile=.pylintrc --recursive=y ./
