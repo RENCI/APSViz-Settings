@@ -17,17 +17,17 @@ env:
 
 # job definition
 jobs:
-  linting:
-    name: PyLint
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-      - run: pip3 install -U pip setuptools
-      - run: pip3 install -U -r requirements.txt
-      - run: pylint --max-line-length=150 --disable=broad-except --max-args=7 --min-public-methods=0 --recursive=y ./
+#  linting:
+#    name: PyLint
+#    runs-on: ubuntu-latest
+#    permissions:
+#      contents: read
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: actions/setup-python@v2
+#      - run: pip3 install -U pip setuptools
+#      - run: pip3 install -U -r requirements.txt
+#      - run: pylint --max-line-length=150 --disable=broad-except --max-args=7 --min-public-methods=0 --recursive=y ./
 
   build-and-push-image:
     runs-on: ubuntu-latest
