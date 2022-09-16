@@ -54,7 +54,7 @@ jobs:
       - name: Build/Push the image to the registry
         uses: docker/build-push-action@v3
         with:
-          push: false
+          push: true
           tags: |
             ${{ env.REGISTRY }}:latest
             ${{ env.REGISTRY }}:${{ steps.get_version.outputs.VERSION }}
