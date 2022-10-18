@@ -11,6 +11,7 @@ SPDX-License-Identifier: MIT
 [![RENCI License](https://img.shields.io/badge/License-RENCI-blue.svg)](https://renci.org/)
 [![Python](https://img.shields.io/badge/Python-3.10.8-orange)](https://github.com/PyCQA/pylint)
 [![Linting Pylint](https://img.shields.io/badge/Linting-pylint-yellowgreen)](https://github.com/PyCQA/pylint)
+[![Build and push the APSVIZ Supervisor settings Docker image tagged with "latest" and version number](https://github.com/RENCI/APSVIZ-Settings/actions/workflows/image-push.yml/badge.svg)](https://github.com/RENCI/APSVIZ-Settings/actions/workflows/image-push.yml)
 
 # APSViz Settings
 Website/services that allow access to the APSViz Supervisor configuration.
