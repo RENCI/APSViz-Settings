@@ -4,10 +4,14 @@
 # SPDX-License-Identifier: LicenseRef-RENCI
 # SPDX-License-Identifier: MIT
 
-"""APSVIZ settings server."""
+"""
+    APSVIZ settings server.
+"""
+
 import json
 import os
 import re
+import uuid
 
 from enum import Enum
 from typing import Union
@@ -20,7 +24,7 @@ from common.logger import LoggingUtil
 from common.pg_utils import PGUtils
 
 # set the app version
-APP_VERSION = 'v0.2.0'
+APP_VERSION = 'v0.2.1'
 
 # get the DB connection details for the asgs DB
 asgs_dbname = os.environ.get('ASGS_DB_DATABASE')
@@ -335,8 +339,9 @@ async def get_terria_map_catalog_data_file(file_name: Union[str, None] = Query(d
     # init the returned html status code
     status_code = 200
 
-    # get the full file path to the dummy file
-    file_path = os.path.join(os.path.dirname(__file__), file_name)
+    # get the full file path to the dummy file.
+    # append a uuid for a unique path to avoid collisions
+    temp_file_path: str = os.path.join(os.getenv('TEMP_FILE_PATH', os.path.dirname(__file__)), str(uuid.uuid4()))
 
     # prep the data for the DB SP
     grid_type = 'null' if not grid_type else f"'{grid_type}'"
@@ -357,7 +362,7 @@ async def get_terria_map_catalog_data_file(file_name: Union[str, None] = Query(d
         ret_val = pg_db.get_terria_map_catalog_data(**kwargs)
 
         # write out the data to a file
-        with open(file_path, 'w', encoding='utf-8') as f_h:
+        with open(temp_file_path, 'w', encoding='utf-8') as f_h:
             json.dump(ret_val, f_h)
 
     except Exception:
@@ -368,7 +373,7 @@ async def get_terria_map_catalog_data_file(file_name: Union[str, None] = Query(d
         status_code = 500
 
     # return to the caller
-    return FileResponse(path=file_path, filename=file_name, media_type='text/json', status_code=status_code)
+    return FileResponse(path=temp_file_path, filename=file_name, media_type='text/json', status_code=status_code)
 
 
 @APP.get("/get_log_file_list")
