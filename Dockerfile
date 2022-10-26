@@ -13,6 +13,12 @@
 # leverage the renci python base image
 FROM python:3.10-slim
 
+# update the image base
+RUN apt-get update && apt-get -y upgrade
+
+# clear the apt cache
+RUN apt-get clean
+
 # get some credit
 LABEL maintainer="powen@renci.org"
 
