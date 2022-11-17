@@ -24,7 +24,7 @@ from common.logger import LoggingUtil
 from common.pg_utils import PGUtils
 
 # set the app version
-APP_VERSION = 'v0.2.1'
+APP_VERSION = 'v0.2.2'
 
 # get the DB connection details for the asgs DB
 asgs_dbname = os.environ.get('ASGS_DB_DATABASE')
@@ -98,6 +98,7 @@ class ImageRepo(str, Enum):
     RENCIORG = 'renciorg'
 
 
+# declare the two potential image repos
 image_repo_to_repo_name: dict = {'renciorg': 'renciorg', 'containers.renci.org': 'containers.renci.org/eds'}
 
 # declare the component job type image name
