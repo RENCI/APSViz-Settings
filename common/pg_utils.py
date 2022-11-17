@@ -198,16 +198,19 @@ class PGUtils:
         """
 
         # declare an array of the job id and next job type id in sequence
-        next_job_id_for_job_ids: list = [  # record id, next job type
+        next_job_id_for_job_ids: list = [
+            # record id, next job type
             # -------------------------
-            '1, 12',  # staging step
+            '1, 12',   # staging step
             '13, 25',  # hazus step
             '17, 23',  # obs-mod ast step
-            '15, 24',  # adcirc to cog step
+            '15, 26',  # adcirc to cog step
+            '18, 24',  # adcirc time to cog step
             '16, 19',  # geotiff to cog step
             '11, 20',  # load geo server step
-            '14, 21'  # final staging step
+            '14, 21'   # final staging step
             ]
+
 
         # init the failed flag
         failed: bool = False
