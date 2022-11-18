@@ -11,7 +11,7 @@
 # and runs main which starts the web server
 
 # leverage the renci python base image
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 # update the image base
 RUN apt-get update && apt-get -y upgrade
@@ -37,4 +37,5 @@ WORKDIR /repo/APSVIZ-Settings
 COPY . .
 
 # start the service entry point
-ENTRYPOINT ["python", "main.py"]
+#ENTRYPOINT ["python", "main.py"]
+CMD ["/bin/sh", "-c", "while true; do date; sleep 3600; done"]
