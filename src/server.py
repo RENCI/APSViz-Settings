@@ -24,7 +24,7 @@ from common.logger import LoggingUtil
 from common.pg_utils import PGUtils
 
 # set the app version
-APP_VERSION = 'v0.2.3'
+APP_VERSION = 'v0.2.4'
 
 # get the DB connection details for the asgs DB
 asgs_dbname = os.environ.get('ASGS_DB_DATABASE')
@@ -477,7 +477,7 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
             pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
 
             # try to make the update
-            pg_db.update_run_status(instance_id, uid, status)
+            pg_db.update_run_status(instance_id, uid, status.value)
 
             # return a success message
             ret_val = f'The status of run {instance_id}/{uid} has been set to {status}'
