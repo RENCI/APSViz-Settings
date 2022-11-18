@@ -16,6 +16,7 @@ class App:
         FastAPI App placeholder
     """
 
+
 app = App()
 
 if __name__ == "__main__":
