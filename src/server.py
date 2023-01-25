@@ -12,6 +12,7 @@ import json
 import os
 import re
 import uuid
+from pathlib import Path
 
 from enum import Enum
 from typing import Union
@@ -24,7 +25,7 @@ from common.logger import LoggingUtil
 from common.pg_utils import PGUtils
 
 # set the app version
-APP_VERSION = 'v0.2.5'
+APP_VERSION = 'v0.2.6'
 
 # get the DB connection details for the asgs DB
 asgs_dbname = os.environ.get('ASGS_DB_DATABASE')
@@ -129,26 +130,16 @@ def get_log_file_list(hostname):
     counter = 0
 
     # get the log path
-    log_file_path: str = LoggingUtil.get_log_path()
+    log_file_path: str = LoggingUtil.get_log_path().replace('\\', '/')
 
-    # go through the root and sub-dirs to find the log files
-    for path, dnames, fnames in os.walk(log_file_path):
-        # for each name in that path
-        for name in fnames:
-            # is it a log file
-            if reg_ex.search(name):
-                # increment the counter
-                counter += 1
+    # go through all the directories
+    for file_path in Path(log_file_path).rglob('*log*'):
+        # increment the counter
+        counter += 1
 
-                # create the path to the file
-                file_path = os.path.join(path, name).replace('\\', '/')
-                url = f'{hostname}/get_log_file/?log_file={file_path.replace(log_file_path, "")[1:]}'
-
-                # save the absolute file path, endpoint url, and file size in a dict
-                ret_val.update({f'{name}_{counter}': {'file_name': file_path.replace(log_file_path, "")[1:], 'url': f'{url}',
-                                                      'file_size': f'{os.path.getsize(file_path)} bytes'}})
-
-                logger.debug('get_file_list(): url: %s, dnames: %s', url, dnames)
+        # save the absolute file path, endpoint URL, and file size in a dict
+        ret_val.update({f"{file_path.name}_{counter}": {'file_name': file_path.name, 'url': f'{hostname}/get_log_file/?log_file={file_path}',
+                                                        'file_size': f'{file_path.stat().st_size} bytes'}})
 
     # return the list to the caller
     return ret_val
@@ -301,8 +292,8 @@ async def get_terria_map_catalog_data(grid_type: Union[str, None] = Query(defaul
         end_date = 'null' if not end_date else f"'{end_date}'"
 
         # compile a argument list
-        kwargs = {'grid_type': grid_type, "event_type": event_type, "instance_name": instance_name, "run_date": run_date,
-                  "end_date": end_date, "limit": limit}
+        kwargs = {'grid_type': grid_type, "event_type": event_type, "instance_name": instance_name, "run_date": run_date, "end_date": end_date,
+                  "limit": limit}
 
         # try to make the call for records
         ret_val = pg_db.get_terria_map_catalog_data(**kwargs)
@@ -401,23 +392,21 @@ async def get_the_log_file(log_file: str = Query('log_file')):
     Gets the log file specified. This method only expects a properly named file.
 
     """
-    # get the log path
-    log_file_path: str = LoggingUtil.get_log_path()
+    # get the path to the log files
+    log_dir: str = LoggingUtil.get_log_path()
 
-    # make sure this is a valid log file
-    if log_file.endswith('.log') or (log_file[:-2].endswith('.log') and isinstance(int(log_file[-1]), int)):
-        # append the log file to the log file path
-        log_file_path = f'{os.path.join(log_file_path, log_file)}'
+    # turn the incoming log file into a path object
+    log_file_path = Path(log_file)
 
-        # do some file path validation
-        if os.path.exists(log_file_path):
+    # loop through the log file directory
+    for real_log_file in Path(log_dir).rglob('*log*'):
+        # if the target file is found in the log directory
+        if real_log_file == log_file_path:
             # return the file to the caller
-            return FileResponse(path=log_file_path, filename=os.path.basename(log_file_path), media_type='text/plain')
+            return FileResponse(path=log_file_path, filename=log_file_path.name, media_type='text/plain')
 
-        # return an error
-        return JSONResponse(content={'Response': 'Error - Log file does not exist.'}, status_code=500, media_type="application/json")
-
-    return JSONResponse(content={'Response': 'Error - Invalid log file name.'}, status_code=500, media_type="application/json")
+    # if we get here return an error
+    return JSONResponse(content={'Response': 'Error - Log file does not exist.'}, status_code=500, media_type="application/json")
 
 
 @APP.get("/get_run_list", status_code=200)
