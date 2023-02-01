@@ -173,24 +173,24 @@ class PGUtils:
         """
 
         # create the sql
-        sql: str = 'SELECT public.get_supervisor_job_defs_json()'
+        sql: str = f'SELECT public.get_supervisor_job_defs_json()'
 
         # get the data
         return self.exec_sql(sql)[0][0]
 
-    def get_job_order(self):
+    def get_job_order(self, workflow_type: str):
         """
         gets the supervisor job order
 
         :return:
         """
         # create the sql
-        sql: str = 'SELECT public.get_supervisor_job_order()'
+        sql: str = f"SELECT public.get_supervisor_job_order('{workflow_type}')"
 
         # get the data
         return self.exec_sql(sql)[0][0]
 
-    def reset_job_order(self) -> bool:
+    def reset_job_order(self, workflow_type_name: str) -> bool:
         """
         resets the supervisor job order to the default
 
@@ -198,24 +198,37 @@ class PGUtils:
         """
 
         # declare an array of the job id and next job type id in sequence
-        next_job_id_for_job_ids: list = [
-            # record id, next job type
-            # -------------------------
-            '1, 12',   # staging step
-            '13, 25',  # hazus step
-            '17, 23',  # obs-mod ast step
-            '15, 26',  # adcirc to cog step
-            '18, 24',  # adcirc time to cog step
-            '16, 19',  # geotiff to cog step
-            '11, 20',  # load geo server step
-            '14, 21'   # final staging step
-            ]
+        workflow_job_types: dict = {
+            'ASGS': [
+                # record id, next job type
+                # -------------------------
+                '1, 12',   # staging step
+                '13, 25',  # hazus step
+                '17, 23',  # obs-mod ast step
+                '15, 26',  # adcirc to cog step
+                '18, 24',  # adcirc time to cog step
+                '16, 19',  # geotiff to cog step
+                '11, 20',  # load geo server step
+                '14, 21'   # final staging step
+                ],
+            'ECFLOW': [
+                # record id, next job type
+                # -------------------------
+                '1, 25',  # staging step
+                '17, 23',  # obs-mod ast step
+                '15, 26',  # adcirc to cog step
+                '18, 24',  # adcirc time to cog step
+                '16, 19',  # geotiff to cog step
+                '11, 20',  # load geo server step
+                '14, 21'  # final staging step
+                ]
+         }
 
         # init the failed flag
         failed: bool = False
 
-        # execute each statement
-        for item in next_job_id_for_job_ids:
+        # for each job entry
+        for item in workflow_job_types[workflow_type_name]:
             # update the record
             ret_val = self.exec_sql(f'SELECT public.update_next_job_for_job({item})')
 
@@ -294,6 +307,7 @@ class PGUtils:
 
         :param instance_id:
         :param uid:
+
         :param status
         :return:
         """

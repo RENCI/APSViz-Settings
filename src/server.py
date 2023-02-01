@@ -25,7 +25,7 @@ from common.logger import LoggingUtil
 from common.pg_utils import PGUtils
 
 # set the app version
-APP_VERSION = 'v0.2.6'
+APP_VERSION = 'v0.2.7'
 
 # get the DB connection details for the asgs DB
 asgs_dbname = os.environ.get('ASGS_DB_DATABASE')
@@ -45,6 +45,15 @@ APP = FastAPI(title='APSVIZ Settings', version=APP_VERSION)
 
 # declare app access details
 APP.add_middleware(CORSMiddleware, allow_origins=['*'], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+
+# declare the supervisor workflow types
+class WorkflowTypeName(str, Enum):
+    """
+    Class enums for the supervisor workflow types
+    """
+    ASGS = 'ASGS'
+    ECFLOW = 'ECFLOW'
 
 
 # declare the job type names
@@ -145,10 +154,10 @@ def get_log_file_list(hostname):
     return ret_val
 
 
-@APP.get('/get_job_order', status_code=200)
-async def display_job_order() -> json:
+@APP.get('/get_job_order/{workflow_type_name}', status_code=200)
+async def display_job_order(workflow_type_name: WorkflowTypeName) -> json:
     """
-    Displays the job process order.
+    Displays the job order for the workflow type selected.
 
     """
 
@@ -160,7 +169,7 @@ async def display_job_order() -> json:
         pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password)
 
         # try to make the call for records
-        ret_val = pg_db.get_job_order()
+        ret_val = pg_db.get_job_order(WorkflowTypeName(workflow_type_name).value)
 
     except Exception:
         # return a failure message
@@ -176,13 +185,16 @@ async def display_job_order() -> json:
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
 
-@APP.get('/reset_job_order', status_code=200)
-async def reset_job_order() -> json:
+@APP.get('/reset_job_order/{workflow_type_name}', status_code=200)
+async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
     """
-    resets the job process order to the default.
+    resets the job process order to the default for the workflow selected.
 
-    The normal sequence of jobs are:
-    staging -> hazus -> obs-mod-ast -> adcirc to COGs -> compute COGs -> load geo server -> final staging -> complete
+    The normal sequence of ASGS jobs are:
+    staging -> hazus -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COGs geotiffs -> load geo server -> final staging -> complete
+
+    The normal sequence of ECFLOW jobs are:
+    staging -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COG geotiffs -> load geo server -> final staging -> complete
 
     """
 
@@ -195,17 +207,18 @@ async def reset_job_order() -> json:
         pg_db = PGUtils(asgs_dbname, asgs_username, asgs_password, auto_commit=False)
 
         # try to make the call for records
-        ret_val = pg_db.reset_job_order()
+        ret_val = pg_db.reset_job_order(WorkflowTypeName(workflow_type_name).value)
 
         # check the return value for failure, failed == true
         if ret_val:
             raise Exception(f'Failure trying to reset the job order. Error: {ret_val}')
 
         # get the new job order
-        job_order = pg_db.get_job_order()
+        job_order = pg_db.get_job_order(WorkflowTypeName(workflow_type_name).value)
 
         # return a success message with the new job order
-        ret_val = [{'message': 'The job order has been reset to the default.'}, {'job_order': job_order}]
+        ret_val = [{'message': f'The job order for the {WorkflowTypeName(workflow_type_name).value} workflow has been reset to the default.'},
+                   {'job_order': job_order}]
 
     except Exception:
         # return a failure message
@@ -224,12 +237,15 @@ async def reset_job_order() -> json:
 @APP.get('/get_job_defs', status_code=200)
 async def display_job_definitions() -> json:
     """
-    Displays the job definitions.
+    Displays the job definitions for all workflows. Note that this list is in alphabetical order (not in job execute order).
 
     """
 
     # init the returned html status code
     status_code = 200
+
+    # init the return
+    job_config_data: dict = {}
 
     try:
         # create the postgres access object
@@ -238,15 +254,20 @@ async def display_job_definitions() -> json:
         # try to make the call for records
         job_data = pg_db.get_job_defs()
 
-        # make the data readable
-        ret_val = {list(x)[0]: x.get(list(x)[0]) for x in job_data}
+        # make sure we got a list of config data items
+        if isinstance(job_data, list):
+            for workflow_item in job_data:
+                # get the workflow type name
+                workflow_type = list(workflow_item.keys())[0]
 
-        # fix the arrays for each job def.
-        # they come in as a string
-        for item in ret_val.items():
-            item[1]['COMMAND_LINE'] = json.loads(item[1]['COMMAND_LINE'])
-            item[1]['COMMAND_MATRIX'] = json.loads(item[1]['COMMAND_MATRIX'])
-            item[1]['PARALLEL'] = json.loads(item[1]['PARALLEL']) if item[1]['PARALLEL'] is not None else None
+                # get the data looking like something we are used to
+                job_config_data[workflow_type] = {list(x)[0]: x.get(list(x)[0]) for x in workflow_item[workflow_type]}
+
+                # fix the arrays for each job def. they come in as a string
+                for item in job_config_data[workflow_type].items():
+                    item[1]['COMMAND_LINE'] = json.loads(item[1]['COMMAND_LINE'])
+                    item[1]['COMMAND_MATRIX'] = json.loads(item[1]['COMMAND_MATRIX'])
+                    item[1]['PARALLEL'] = json.loads(item[1]['PARALLEL']) if item[1]['PARALLEL'] is not None else None
 
     except Exception:
         # return a failure message
@@ -259,7 +280,7 @@ async def display_job_definitions() -> json:
         status_code = 500
 
     # return to the caller
-    return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
+    return JSONResponse(content=job_config_data, status_code=status_code, media_type="application/json")
 
 
 @APP.get('/get_terria_map_data', status_code=200)
@@ -451,7 +472,7 @@ async def get_the_run_list():
 @APP.put('/instance_id/{instance_id}/uid/{uid}/status/{status}', status_code=200)
 async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = RunStatus('new')):
     """
-    Updates the run properties run status of a job.
+    Updates the run status of a selected job.
 
     ex: instance id: 3057, uid: 2021062406-namforecast, status: do not rerun
 
@@ -500,6 +521,7 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
     Updates a supervisor component image version label in the supervisor job run configuration.
 
     Notes:
+     - This will update the version for ALL references of this component across ALL workflows.
      - Please must select the image repository that houses your container image.
      - The version label must match what has been uploaded to docker hub.
 
@@ -548,13 +570,17 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
 
 
 # Updates a supervisor component's next process.
-@APP.put('/job_type_name/{job_type_name}/next_job_type/{next_job_type_name}', status_code=200)
-async def set_the_supervisor_job_order(job_type_name: JobTypeName, next_job_type_name: NextJobTypeName):
+@APP.put('/workflow_type_name/{workflow_type_name}/job_type_name/{job_type_name}/next_job_type/{next_job_type_name}', status_code=200)
+async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job_type_name: JobTypeName, next_job_type_name: NextJobTypeName):
     """
-    Modifies the supervisor component's linked list of jobs. Select the job process name and then select it's next job process name.
+    Modifies the supervisor component's linked list of jobs. Select the workflow type, then select the job process name and the next job
+    process name.
 
-    The normal sequence of jobs are:
-    staging -> hazus -> obs-mod-ast -> adcirc to COGs -> compute COGs -> load geo server -> final staging -> complete
+    The normal sequence of ASGS jobs are:
+    staging -> hazus -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COGs geotiffs -> load geo server -> final staging -> complete
+
+    The normal sequence of ECFLOW jobs are:
+    staging -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COG geotiffs -> load geo server -> final staging -> complete
     """
     # init the returned html status code
     status_code = 200
