@@ -230,7 +230,7 @@ class PGUtils:
         # for each job entry
         for item in workflow_job_types[workflow_type_name]:
             # update the record
-            ret_val = self.exec_sql(f'SELECT public.update_next_job_for_job({item})')
+            ret_val = self.exec_sql(f"SELECT public.update_next_job_for_job({item}, '{workflow_type_name}')")
 
             # anything other than a list returned is an error
             if not isinstance(ret_val, list):
