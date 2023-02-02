@@ -271,17 +271,18 @@ class PGUtils:
         # return the data
         return self.exec_sql(sql)[0][0]
 
-    def update_next_job_for_job(self, job_name: str, next_process_id: int):
+    def update_next_job_for_job(self, job_name: str, next_process_id: int, workflow_type_name: str):
         """
         Updates the next job process id for a job
 
         :param job_name:
         :param next_process_id:
+        :param workflow_type_name:
         :return: nothing
         """
 
         # create the sql
-        sql = f"SELECT public.update_next_job_for_job('{job_name}', {next_process_id})"
+        sql = f"SELECT public.update_next_job_for_job('{job_name}', {next_process_id}, '{workflow_type_name}')"
 
         # run the SQL
         self.exec_sql(sql)
