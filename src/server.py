@@ -173,7 +173,7 @@ async def display_job_order(workflow_type_name: WorkflowTypeName) -> json:
 
     except Exception:
         # return a failure message
-        ret_val = 'Exception detected trying to get the job order.'
+        ret_val = f'Exception detected trying to get the {WorkflowTypeName(workflow_type_name).value} job order.'
 
         # log the exception
         logger.exception(ret_val)
@@ -211,7 +211,7 @@ async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
 
         # check the return value for failure, failed == true
         if ret_val:
-            raise Exception(f'Failure trying to reset the job order. Error: {ret_val}')
+            raise Exception(f'Failure trying to reset the {WorkflowTypeName(workflow_type_name).value} job order. Error: {ret_val}')
 
         # get the new job order
         job_order = pg_db.get_job_order(WorkflowTypeName(workflow_type_name).value)
@@ -222,7 +222,7 @@ async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
 
     except Exception:
         # return a failure message
-        ret_val = 'Exception detected trying to get the job order.'
+        ret_val = f'Exception detected trying to get the {WorkflowTypeName(workflow_type_name).value} job order.'
 
         # log the exception
         logger.exception(ret_val)
@@ -586,7 +586,6 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
     status_code = 200
 
     try:
-
         # check for a recursive situation
         if job_type_name == next_job_type_name:
             # set the error msg
@@ -614,17 +613,20 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
                 job_order = pg_db.get_job_order(WorkflowTypeName(workflow_type_name).value)
 
                 # return a success message with the new job order
-                ret_val = [{'message': f'The {job_type_name} next process has been set to {next_job_type_name}'}, {'new_order': job_order}]
+                ret_val = [{
+                    'message': f'The {WorkflowTypeName(workflow_type_name).value} {job_type_name} next process has been set to {next_job_type_name}'},
+                    {'new_order': job_order}]
             else:
                 # set the error msg
-                ret_val = f'The next job process ID was not found for {next_job_type_name}'
+                ret_val = f'The next job process ID was not found for {WorkflowTypeName(workflow_type_name).value} {next_job_type_name}'
 
                 # declare an error for the user
                 status_code = 500
 
     except Exception:
         # return a failure message
-        ret_val = f'Exception detected trying to update the next job name. Job name {job_type_name}, next job name: {next_job_type_name}'
+        ret_val = f'Exception detected trying to update the {WorkflowTypeName(workflow_type_name).value} next job name for' \
+                  f' {job_type_name}, next job name: {next_job_type_name}'
 
         # log the exception
         logger.exception(ret_val)
