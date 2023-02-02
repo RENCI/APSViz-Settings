@@ -611,7 +611,7 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
                 pg_db.update_next_job_for_job(job_type_name, next_job_type_id)
 
                 # get the new job order
-                job_order = pg_db.get_job_order()
+                job_order = pg_db.get_job_order(WorkflowTypeName(workflow_type_name).value)
 
                 # return a success message with the new job order
                 ret_val = [{'message': f'The {job_type_name} next process has been set to {next_job_type_name}'}, {'new_order': job_order}]
