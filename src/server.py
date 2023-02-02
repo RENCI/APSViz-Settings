@@ -608,7 +608,7 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
                     job_type_name += '-'
 
                 # make the update
-                pg_db.update_next_job_for_job(job_type_name, next_job_type_id)
+                pg_db.update_next_job_for_job(job_type_name, next_job_type_id, WorkflowTypeName(workflow_type_name).value)
 
                 # get the new job order
                 job_order = pg_db.get_job_order(WorkflowTypeName(workflow_type_name).value)
