@@ -212,15 +212,15 @@ class PGUtils:
                 '14, 21'   # final staging step
                 ],
             'ECFLOW': [
-                # record id, next job type
+                # job id, next job type
                 # -------------------------
-                '1, 25',  # staging step
-                '17, 23',  # obs-mod ast step
-                '15, 26',  # adcirc to cog step
-                '18, 24',  # adcirc time to cog step
-                '16, 19',  # geotiff to cog step
-                '11, 20',  # load geo server step
-                '14, 21'  # final staging step
+                '101, 25',  # staging step
+                '106, 23',  # obs-mod ast step
+                '104, 26',  # adcirc to cog step
+                '108, 24',  # adcirc time to cog step
+                '105, 19',  # geotiff to cog step
+                '102, 20',  # load geo server step
+                '103, 21'  # final staging step
                 ]
          }
 
@@ -229,8 +229,11 @@ class PGUtils:
 
         # for each job entry
         for item in workflow_job_types[workflow_type_name]:
-            # update the record
-            ret_val = self.exec_sql(f"SELECT public.update_next_job_for_job({item}, '{workflow_type_name}')")
+            # build the update sql
+            sql = f"SELECT public.update_next_job_for_job({item}, '{workflow_type_name}')"
+
+            # and execute it
+            ret_val = self.exec_sql(sql)
 
             # anything other than a list returned is an error
             if not isinstance(ret_val, list):
