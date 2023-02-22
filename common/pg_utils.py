@@ -173,7 +173,7 @@ class PGUtils:
         """
 
         # create the sql
-        sql: str = f'SELECT public.get_supervisor_job_defs_json()'
+        sql: str = 'SELECT public.get_supervisor_job_defs_json()'
 
         # get the data
         return self.exec_sql(sql)[0][0]
