@@ -25,7 +25,10 @@ from common.logger import LoggingUtil
 from common.pg_utils import PGUtils
 
 # set the app version
-APP_VERSION = 'v0.2.7'
+APP_VERSION = 'v0.2.8'
+
+# declare the FastAPI details
+APP = FastAPI(title='APSVIZ Settings', version=APP_VERSION)
 
 # get the DB connection details for the asgs DB
 asgs_dbname = os.environ.get('ASGS_DB_DATABASE')
@@ -39,9 +42,6 @@ apsviz_password = os.environ.get('APSVIZ_DB_PASSWORD')
 
 # create a logger
 logger = LoggingUtil.init_logging("APSVIZ.Settings", line_format='medium')
-
-# declare the FastAPI details
-APP = FastAPI(title='APSVIZ Settings', version=APP_VERSION)
 
 # declare app access details
 APP.add_middleware(CORSMiddleware, allow_origins=['*'], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
@@ -154,7 +154,7 @@ def get_log_file_list(hostname):
     return ret_val
 
 
-@APP.get('/get_job_order/{workflow_type_name}', status_code=200)
+@APP.get('/get_job_order/{workflow_type_name}', status_code=200, response_model=None)
 async def display_job_order(workflow_type_name: WorkflowTypeName) -> json:
     """
     Displays the job order for the workflow type selected.
@@ -185,7 +185,7 @@ async def display_job_order(workflow_type_name: WorkflowTypeName) -> json:
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
 
-@APP.get('/reset_job_order/{workflow_type_name}', status_code=200)
+@APP.get('/reset_job_order/{workflow_type_name}', status_code=200, response_model=None)
 async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
     """
     resets the job process order to the default for the workflow selected.
@@ -234,7 +234,7 @@ async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
 
-@APP.get('/get_job_defs', status_code=200)
+@APP.get('/get_job_defs', status_code=200, response_model=None)
 async def display_job_definitions() -> json:
     """
     Displays the job definitions for all workflows. Note that this list is in alphabetical order (not in job execute order).
@@ -283,16 +283,18 @@ async def display_job_definitions() -> json:
     return JSONResponse(content=job_config_data, status_code=status_code, media_type="application/json")
 
 
-@APP.get('/get_terria_map_data', status_code=200)
+@APP.get('/get_terria_map_data', status_code=200, response_model=None)
 async def get_terria_map_catalog_data(grid_type: Union[str, None] = Query(default=None), event_type: Union[str, None] = Query(default=None),
-                                      instance_name: Union[str, None] = Query(default=None), run_date: Union[str, None] = Query(default=None),
-                                      end_date: Union[str, None] = Query(default=None), limit: Union[int, None] = Query(default=4)) -> json:
+                                      instance_name: Union[str, None] = Query(default=None), met_class: Union[str, None] = Query(default=None),
+                                      run_date: Union[str, None] = Query(default=None), end_date: Union[str, None] = Query(default=None),
+                                      limit: Union[int, None] = Query(default=4)) -> json:
     """
     Gets the json formatted terria map UI catalog data.
     <br/>Note: Leave filtering params empty if not desired.
     <br/>&nbsp;&nbsp;&nbsp;grid_type: Filter by the name of the ASGS grid
     <br/>&nbsp;&nbsp;&nbsp;event_type: Filter by the event type
     <br/>&nbsp;&nbsp;&nbsp;instance_name: Filter by the name of the ASGS instance
+    <br/>&nbsp;&nbsp;&nbsp;met_class: Filter by the meteorological class
     <br/>&nbsp;&nbsp;&nbsp;run_date: Filter by the run date in the form of yyyy-mm-dd
     <br/>&nbsp;&nbsp;&nbsp;end_date: Filter by the data between the run date and end date
     <br/>&nbsp;&nbsp;&nbsp;limit: Limit the number of catalog records returned (default is 4)
@@ -309,11 +311,12 @@ async def get_terria_map_catalog_data(grid_type: Union[str, None] = Query(defaul
         grid_type = 'null' if not grid_type else f"'{grid_type}'"
         event_type = 'null' if not event_type else f"'{event_type}'"
         instance_name = 'null' if not instance_name else f"'{instance_name}'"
+        met_class = 'null' if not met_class else f"'{met_class}'"
         run_date = 'null' if not run_date else f"'{run_date}'"
         end_date = 'null' if not end_date else f"'{end_date}'"
 
         # compile a argument list
-        kwargs = {'grid_type': grid_type, "event_type": event_type, "instance_name": instance_name, "run_date": run_date, "end_date": end_date,
+        kwargs = {'grid_type': grid_type, "event_type": event_type, "instance_name": instance_name, "met_class": met_class, "run_date": run_date, "end_date": end_date,
                   "limit": limit}
 
         # try to make the call for records
@@ -332,11 +335,11 @@ async def get_terria_map_catalog_data(grid_type: Union[str, None] = Query(defaul
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
 
-@APP.get('/get_terria_map_data_file', status_code=200)
+@APP.get('/get_terria_map_data_file', status_code=200, response_model=None)
 async def get_terria_map_catalog_data_file(file_name: Union[str, None] = Query(default='apsviz.json'),
                                            grid_type: Union[str, None] = Query(default=None), event_type: Union[str, None] = Query(default=None),
-                                           instance_name: Union[str, None] = Query(default=None), run_date: Union[str, None] = Query(default=None),
-                                           end_date: Union[str, None] = Query(default=None),
+                                           instance_name: Union[str, None] = Query(default=None), met_class: Union[str, None] = Query(default=None),
+                                           run_date: Union[str, None] = Query(default=None), end_date: Union[str, None] = Query(default=None),
                                            limit: Union[int, None] = Query(default=4)) -> FileResponse:
     """
     Returns the json formatted terria map UI catalog data in a file specified.
@@ -345,6 +348,7 @@ async def get_terria_map_catalog_data_file(file_name: Union[str, None] = Query(d
     <br/>&nbsp;&nbsp;&nbsp;grid_type: Filter by the name of the ASGS grid
     <br/>&nbsp;&nbsp;&nbsp;event_type: Filter by the event type
     <br/>&nbsp;&nbsp;&nbsp;instance_name: Filter by the name of the ASGS instance
+    <br/>&nbsp;&nbsp;&nbsp;met_class: Filter by the meteorological class
     <br/>&nbsp;&nbsp;&nbsp;run_date: Filter by the run date in the form of yyyy-mm-dd
     <br/>&nbsp;&nbsp;&nbsp;end_date: Filter by the data between the run date and end date
     <br/>&nbsp;&nbsp;&nbsp;limit: Limit the number of catalog records returned (default is 2)
@@ -366,12 +370,13 @@ async def get_terria_map_catalog_data_file(file_name: Union[str, None] = Query(d
     grid_type = 'null' if not grid_type else f"'{grid_type}'"
     event_type = 'null' if not event_type else f"'{event_type}'"
     instance_name = 'null' if not instance_name else f"'{instance_name}'"
+    met_class = 'null' if not met_class else f"'{met_class}'"
     run_date = 'null' if not run_date else f"'{run_date}'"
     end_date = 'null' if not end_date else f"'{end_date}'"
 
     # compile a argument list
-    kwargs = {'grid_type': grid_type, "event_type": event_type, "instance_name": instance_name, "run_date": run_date, "end_date": end_date,
-              "limit": limit}
+    kwargs = {'grid_type': grid_type, "event_type": event_type, "instance_name": instance_name, "run_date": run_date,
+              "end_date": end_date, "limit": limit, "met_class": met_class}
 
     try:
         # create the postgres access object
@@ -395,7 +400,7 @@ async def get_terria_map_catalog_data_file(file_name: Union[str, None] = Query(d
     return FileResponse(path=temp_file_path, filename=file_name, media_type='text/json', status_code=status_code)
 
 
-@APP.get("/get_log_file_list")
+@APP.get("/get_log_file_list", response_model=None)
 async def get_the_log_file_list(request: Request):
     """
     Gets the log file list. each of these entries could be used in the get_log_file endpoint
@@ -407,7 +412,7 @@ async def get_the_log_file_list(request: Request):
                         media_type="application/json")
 
 
-@APP.get("/get_log_file/")
+@APP.get("/get_log_file/", response_model=None)
 async def get_the_log_file(log_file: str = Query('log_file')):
     """
     Gets the log file specified. This method only expects a properly named file.
@@ -430,7 +435,7 @@ async def get_the_log_file(log_file: str = Query('log_file')):
     return JSONResponse(content={'Response': 'Error - Log file does not exist.'}, status_code=500, media_type="application/json")
 
 
-@APP.get("/get_run_list", status_code=200)
+@APP.get("/get_run_list", status_code=200, response_model=None)
 async def get_the_run_list():
     """
     Gets the run information for the last 100 runs.
@@ -469,7 +474,7 @@ async def get_the_run_list():
 
 
 # sets the run.properties run status to 'new' for a job
-@APP.put('/instance_id/{instance_id}/uid/{uid}/status/{status}', status_code=200)
+@APP.put('/instance_id/{instance_id}/uid/{uid}/status/{status}', status_code=200, response_model=None)
 async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = RunStatus('new')):
     """
     Updates the run status of a selected job.
@@ -515,7 +520,7 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
 
 
 # Updates the image version for a job
-@APP.put('/image_repo/{image_repo}/job_type_name/{job_type_name}/image_version/{version}', status_code=200)
+@APP.put('/image_repo/{image_repo}/job_type_name/{job_type_name}/image_version/{version}', status_code=200, response_model=None)
 async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_type_name: JobTypeName, version: str):
     """
     Updates a supervisor component image version label in the supervisor job run configuration.
@@ -570,7 +575,7 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
 
 
 # Updates a supervisor component's next process.
-@APP.put('/workflow_type_name/{workflow_type_name}/job_type_name/{job_type_name}/next_job_type/{next_job_type_name}', status_code=200)
+@APP.put('/workflow_type_name/{workflow_type_name}/job_type_name/{job_type_name}/next_job_type/{next_job_type_name}', status_code=200, response_model=None)
 async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job_type_name: JobTypeName, next_job_type_name: NextJobTypeName):
     """
     Modifies the supervisor component's linked list of jobs. Select the workflow type, then select the job process name and the next job
