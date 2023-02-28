@@ -221,7 +221,10 @@ class PGUtils:
                 '108, 24',  # adcirc time to cog step
                 '105, 19',  # geotiff to cog step
                 '102, 20',  # load geo server step
-                '103, 21'  # final staging step
+                '103, 21'   # final staging step
+                ],
+            'HECRAS': [
+                '201, 21',  # load geo server step
                 ]
          }
 
