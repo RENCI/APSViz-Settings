@@ -285,12 +285,12 @@ async def display_job_definitions() -> json:
     return JSONResponse(content=job_config_data, status_code=status_code, media_type="application/json")
 
 
-@APP.get('/get_terria_ui_data', status_code=200, response_model=None)
-async def get_terria_ui_catalog_data(grid_type: Union[str, None] = Query(default=None), event_type: Union[str, None] = Query(default=None),
-                                     instance_name: Union[str, None] = Query(default=None), met_class: Union[str, None] = Query(default=None),
-                                     storm_name: Union[str, None] = Query(default=None), cycle: Union[str, None] = Query(default=None),
-                                     advisory_number: Union[str, None] = Query(default=None), run_date: Union[str, None] = Query(default=None),
-                                     end_date: Union[str, None] = Query(default=None), limit: Union[int, None] = Query(default=4)) -> json:
+@APP.get('/get_terria_map_data', status_code=200, response_model=None)
+async def get_terria_map_catalog_data(grid_type: Union[str, None] = Query(default=None), event_type: Union[str, None] = Query(default=None),
+                                      instance_name: Union[str, None] = Query(default=None), met_class: Union[str, None] = Query(default=None),
+                                      storm_name: Union[str, None] = Query(default=None), cycle: Union[str, None] = Query(default=None),
+                                      advisory_number: Union[str, None] = Query(default=None), run_date: Union[str, None] = Query(default=None),
+                                      end_date: Union[str, None] = Query(default=None), limit: Union[int, None] = Query(default=4)) -> json:
     """
     Gets the json formatted terria map UI catalog data.
     <br/>Note: Leave filtering params empty if not desired.
@@ -344,13 +344,13 @@ async def get_terria_ui_catalog_data(grid_type: Union[str, None] = Query(default
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
 
-@APP.get('/get_terria_ui_data_file', status_code=200, response_model=None)
-async def get_terria_uicatalog_data_file(file_name: Union[str, None] = Query(default='apsviz.json'),
-                                         grid_type: Union[str, None] = Query(default=None), event_type: Union[str, None] = Query(default=None),
-                                         instance_name: Union[str, None] = Query(default=None), met_class: Union[str, None] = Query(default=None),
-                                         storm_name: Union[str, None] = Query(default=None), cycle: Union[str, None] = Query(default=None),
-                                         advisory_number: Union[str, None] = Query(default=None), run_date: Union[str, None] = Query(default=None),
-                                         end_date: Union[str, None] = Query(default=None), limit: Union[int, None] = Query(default=4)) -> json:
+@APP.get('/get_terria_map_data_file', status_code=200, response_model=None)
+async def get_terria_map_catalog_data_file(file_name: Union[str, None] = Query(default='apsviz.json'),
+                                           grid_type: Union[str, None] = Query(default=None), event_type: Union[str, None] = Query(default=None),
+                                           instance_name: Union[str, None] = Query(default=None), met_class: Union[str, None] = Query(default=None),
+                                           storm_name: Union[str, None] = Query(default=None), cycle: Union[str, None] = Query(default=None),
+                                           advisory_number: Union[str, None] = Query(default=None), run_date: Union[str, None] = Query(default=None),
+                                           end_date: Union[str, None] = Query(default=None), limit: Union[int, None] = Query(default=4)) -> json:
     """
     Returns the json formatted terria map UI catalog data in a file specified.
     <br/>Note: Leave filtering params empty if not desired.
