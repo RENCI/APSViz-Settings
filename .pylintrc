@@ -9,6 +9,5 @@
 max-line-length=150
 disable=broad-except,broad-exception-raised
 init-hook='import sys; sys.path.append("./")'
-max-args=10
 min-public-methods=0
 fail-under=9.5
