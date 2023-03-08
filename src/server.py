@@ -26,7 +26,7 @@ from common.logger import LoggingUtil
 from common.pg_utils import PGUtils
 
 # set the app version
-APP_VERSION = 'v0.2.10'
+APP_VERSION = 'v0.2.11'
 
 # declare the FastAPI details
 APP = FastAPI(title='APSVIZ Settings', version=APP_VERSION)
@@ -190,10 +190,10 @@ async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
     resets the job process order to the default for the workflow selected.
 
     The normal sequence of ASGS jobs are:
-    staging -> hazus -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COGs geotiffs -> load geoserver -> final staging -> complete
+    staging -> hazus -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COGs geo-tiffs -> load geoserver -> final staging -> complete
 
     The normal sequence of ECFLOW jobs are:
-    staging -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COG geotiffs -> load geoserver -> final staging -> complete
+    staging -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COG geo-tiffs -> load geoserver -> final staging -> complete
 
     The normal sequence of HECRAS jobs are
     load geoserver -> complete
@@ -600,10 +600,10 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
     process name.
 
     The normal sequence of ASGS jobs are:
-    staging -> hazus -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COGs geotiffs -> load geo server -> final staging -> complete
+    staging -> hazus -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COGs geo-tiffs -> load geo server -> final staging -> complete
 
     The normal sequence of ECFLOW jobs are:
-    staging -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COG geotiffs -> load geo server -> final staging -> complete
+    staging -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COG geo-tiffs -> load geo server -> final staging -> complete
 
     The normal sequence of HECRAS jobs are
     load geoserver -> complete
