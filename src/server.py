@@ -22,24 +22,14 @@ from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 
-from common.logger import LoggingUtil
-from common.pg_utils import PGUtils
+from src.common.logger import LoggingUtil
+from src.common.pg_impl import PGImplementation
 
 # set the app version
-APP_VERSION = 'v0.2.11'
+APP_VERSION = 'v0.3.0'
 
 # declare the FastAPI details
 APP = FastAPI(title='APSVIZ Settings', version=APP_VERSION)
-
-# get the DB connection details for the asgs DB
-asgs_dbname = os.environ.get('ASGS_DB_DATABASE')
-asgs_username = os.environ.get('ASGS_DB_USERNAME')
-asgs_password = os.environ.get('ASGS_DB_PASSWORD')
-
-# get the DB connection details for the apsviz DB
-apsviz_dbname = os.environ.get('APSVIZ_DB_DATABASE')
-apsviz_username = os.environ.get('APSVIZ_DB_USERNAME')
-apsviz_password = os.environ.get('APSVIZ_DB_PASSWORD')
 
 # create a logger
 logger = LoggingUtil.init_logging("APSVIZ.Settings", line_format='medium')
@@ -164,11 +154,15 @@ async def display_job_order(workflow_type_name: WorkflowTypeName) -> json:
     status_code = 200
 
     try:
-        # create the postgres access object
-        pg_db: PGUtils = PGUtils(asgs_dbname, asgs_username, asgs_password)
+        # specify the DB to get a connection
+        # note the extra comma makes this single item a singleton tuple
+        db_name: tuple = ('asgs',)
+
+        # create a DB connection object
+        db_info: PGImplementation = PGImplementation(db_name)
 
         # try to make the call for records
-        ret_val = pg_db.get_job_order(WorkflowTypeName(workflow_type_name).value)
+        ret_val = db_info.get_job_order(WorkflowTypeName(workflow_type_name).value)
 
     except Exception:
         # return a failure message
@@ -205,18 +199,22 @@ async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
     ret_val = ''
 
     try:
-        # create the postgres access object
-        pg_db: PGUtils = PGUtils(asgs_dbname, asgs_username, asgs_password, auto_commit=False)
+        # specify the DB to get a connection
+        # note the extra comma makes this single item a singleton tuple
+        db_name: tuple = ('asgs',)
+
+        # create a DB connection object
+        db_info: PGImplementation = PGImplementation(db_name, auto_commit=False)
 
         # try to make the call for records
-        ret_val = pg_db.reset_job_order(WorkflowTypeName(workflow_type_name).value)
+        ret_val = db_info.reset_job_order(WorkflowTypeName(workflow_type_name).value)
 
         # check the return value for failure, failed == true
         if ret_val:
             raise Exception(f'Failure trying to reset the {WorkflowTypeName(workflow_type_name).value} job order. Error: {ret_val}')
 
         # get the new job order
-        job_order = pg_db.get_job_order(WorkflowTypeName(workflow_type_name).value)
+        job_order = db_info.get_job_order(WorkflowTypeName(workflow_type_name).value)
 
         # return a success message with the new job order
         ret_val = [{'message': f'The job order for the {WorkflowTypeName(workflow_type_name).value} workflow has been reset to the default.'},
@@ -250,11 +248,15 @@ async def display_job_definitions() -> json:
     job_config_data: dict = {}
 
     try:
-        # create the postgres access object
-        pg_db: PGUtils = PGUtils(asgs_dbname, asgs_username, asgs_password)
+        # specify the DB to get a connection
+        # note the extra comma makes this single item a singleton tuple
+        db_name: tuple = ('asgs',)
+
+        # create a DB connection object
+        db_info: PGImplementation = PGImplementation(db_name)
 
         # try to make the call for records
-        job_data = pg_db.get_job_defs()
+        job_data = db_info.get_job_defs()
 
         # make sure we got a list of config data items
         if isinstance(job_data, list):
@@ -313,8 +315,12 @@ async def get_terria_map_catalog_data(grid_type: Union[str, None] = Query(defaul
     status_code: int = 200
 
     try:
-        # create the postgres access object
-        pg_db: PGUtils = PGUtils(apsviz_dbname, apsviz_username, apsviz_password)
+        # specify the DB to get a connection
+        # note the extra comma makes this single item a singleton tuple
+        db_name: tuple = ('apsviz',)
+
+        # create a DB connection object
+        db_info: PGImplementation = PGImplementation(db_name)
 
         # init the kwargs variable
         kwargs: dict = {}
@@ -329,7 +335,7 @@ async def get_terria_map_catalog_data(grid_type: Union[str, None] = Query(defaul
             kwargs.update({param: 'null' if not locals()[param] else f"'{locals()[param]}'"})
 
         # try to make the call for records
-        ret_val: dict = pg_db.get_terria_map_catalog_data(**kwargs)
+        ret_val: dict = db_info.get_terria_map_catalog_data(**kwargs)
     except Exception:
         # return a failure message
         ret_val: str = 'Exception detected trying to get the terria map catalog data.'
@@ -396,11 +402,15 @@ async def get_terria_map_catalog_data_file(file_name: Union[str, None] = Query(d
     temp_file_path: str = os.path.join(temp_file_path, file_name)
 
     try:
-        # create the postgres access object
-        pg_db: PGUtils = PGUtils(apsviz_dbname, apsviz_username, apsviz_password)
+        # specify the DB to get a connection
+        # note the extra comma makes this single item a singleton tuple
+        db_name: tuple = ('apsviz',)
+
+        # create a DB connection object
+        db_info: PGImplementation = PGImplementation(db_name)
 
         # try to make the call for records
-        ret_val: dict = pg_db.get_terria_map_catalog_data(**kwargs)
+        ret_val: dict = db_info.get_terria_map_catalog_data(**kwargs)
 
         # write out the data to a file
         with open(temp_file_path, 'w', encoding='utf-8') as f_h:
@@ -436,7 +446,7 @@ async def get_the_log_file(log_file: str = Query('log_file')):
 
     """
     # get the path to the log files
-    log_dir: str = LoggingUtil.get_log_path()
+    log_dir = LoggingUtil.get_log_path()
 
     # turn the incoming log file into a path object
     log_file_path = Path(log_file)
@@ -463,11 +473,15 @@ async def get_the_run_list():
     status_code = 200
 
     try:
-        # create the postgres access object
-        pg_db: PGUtils = PGUtils(asgs_dbname, asgs_username, asgs_password)
+        # specify the DB to get a connection
+        # note the extra comma makes this single item a singleton tuple
+        db_name: tuple = ('asgs',)
+
+        # create a DB connection object
+        db_info: PGImplementation = PGImplementation(db_name)
 
         # get the run records
-        ret_val = pg_db.get_run_list()
+        ret_val = db_info.get_run_list()
 
         # add a final status to each record
         for item in ret_val:
@@ -505,11 +519,15 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
     # is this a valid instance id
     if instance_id > 0:
         try:
-            # create the postgres access object
-            pg_db: PGUtils = PGUtils(asgs_dbname, asgs_username, asgs_password)
+            # specify the DB to get a connection
+            # note the extra comma makes this single item a singleton tuple
+            db_name: tuple = ('asgs',)
+
+            # create a DB connection object
+            db_info: PGImplementation = PGImplementation(db_name)
 
             # try to make the update
-            pg_db.update_run_status(instance_id, uid, status.value)
+            db_info.update_run_status(instance_id, uid, status.value)
 
             # return a success message
             ret_val = f'The status of run {instance_id}/{uid} has been set to {status}'
@@ -557,12 +575,16 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
 
         # makesure that the input params are legit
         if version_pattern.search(version):
-            # create the postgres access object
-            pg_db: PGUtils = PGUtils(asgs_dbname, asgs_username, asgs_password)
+            # specify the DB to get a connection
+            # note the extra comma makes this single item a singleton tuple
+            db_name: tuple = ('asgs',)
+
+            # create a DB connection object
+            db_info: PGImplementation = PGImplementation(db_name)
 
             # make the update. fix the job name (hyphen) so it matches the DB format
-            pg_db.update_job_image_version(JobTypeName(job_type_name).value + '-',
-                                           image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version)
+            db_info.update_job_image_version(JobTypeName(job_type_name).value + '-',
+                                             image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version)
 
             # return a success message
             ret_val = f"The docker repo/image:version for job name {job_type_name} has been set to " \
@@ -625,18 +647,22 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
 
             # did we get a good type id
             if next_job_type_name is not None:
-                # create the postgres access object
-                pg_db: PGUtils = PGUtils(asgs_dbname, asgs_username, asgs_password)
+                # specify the DB to get a connection
+                # note the extra comma makes this single item a singleton tuple
+                db_name: tuple = ('asgs',)
+
+                # create a DB connection object
+                db_info: PGImplementation = PGImplementation(db_name)
 
                 # prep the record to update key. complete does not have a hyphen
                 if job_type_name != 'complete':
                     job_type_name += '-'
 
                 # make the update
-                pg_db.update_next_job_for_job(job_type_name, next_job_type_id, WorkflowTypeName(workflow_type_name).value)
+                db_info.update_next_job_for_job(job_type_name, next_job_type_id, WorkflowTypeName(workflow_type_name).value)
 
                 # get the new job order
-                job_order = pg_db.get_job_order(WorkflowTypeName(workflow_type_name).value)
+                job_order = db_info.get_job_order(WorkflowTypeName(workflow_type_name).value)
 
                 # return a success message with the new job order
                 ret_val = [{
