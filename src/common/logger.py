@@ -63,6 +63,9 @@ class LoggingUtil:
         # set the logging level
         logger.setLevel(level)
 
+        # dont allow message propagation
+        logger.propagate = False
+
         # if there was a file path passed in use it
         if log_file_path is not None:
             # create a rotating file handler, 100mb max per file with a max number of 10 files
