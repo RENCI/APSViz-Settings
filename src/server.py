@@ -26,16 +26,29 @@ from src.common.logger import LoggingUtil
 from src.common.pg_impl import PGImplementation
 
 # set the app version
-APP_VERSION = 'v0.3.0'
+APP_VERSION = 'v0.3.1'
 
 # declare the FastAPI details
 APP = FastAPI(title='APSVIZ Settings', version=APP_VERSION)
 
+# get the log level and directory from the environment.
+log_level, log_path = LoggingUtil.prep_for_logging()
+
 # create a logger
-logger = LoggingUtil.init_logging("APSVIZ.Settings", line_format='medium')
+logger = LoggingUtil.init_logging("APSVIZ.Settings", level=log_level, line_format='medium', log_file_path=log_path)
 
 # declare app access details
 APP.add_middleware(CORSMiddleware, allow_origins=['*'], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+# specify the DB to get a connection
+# note the extra comma makes this single item a singleton tuple
+db_names: tuple = ('apsviz', 'asgs')
+
+# create a DB connection object
+db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
+
+# create a DB connection object
+db_info_no_auto_commit: PGImplementation = PGImplementation(db_names, _logger=logger, _auto_commit=False)
 
 
 # declare the supervisor workflow types
@@ -154,13 +167,6 @@ async def display_job_order(workflow_type_name: WorkflowTypeName) -> json:
     status_code = 200
 
     try:
-        # specify the DB to get a connection
-        # note the extra comma makes this single item a singleton tuple
-        db_name: tuple = ('asgs',)
-
-        # create a DB connection object
-        db_info: PGImplementation = PGImplementation(db_name)
-
         # try to make the call for records
         ret_val = db_info.get_job_order(WorkflowTypeName(workflow_type_name).value)
 
@@ -199,15 +205,8 @@ async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
     ret_val = ''
 
     try:
-        # specify the DB to get a connection
-        # note the extra comma makes this single item a singleton tuple
-        db_name: tuple = ('asgs',)
-
-        # create a DB connection object
-        db_info: PGImplementation = PGImplementation(db_name, auto_commit=False)
-
         # try to make the call for records
-        ret_val = db_info.reset_job_order(WorkflowTypeName(workflow_type_name).value)
+        ret_val = db_info_no_auto_commit.reset_job_order(WorkflowTypeName(workflow_type_name).value)
 
         # check the return value for failure, failed == true
         if ret_val:
@@ -248,13 +247,6 @@ async def display_job_definitions() -> json:
     job_config_data: dict = {}
 
     try:
-        # specify the DB to get a connection
-        # note the extra comma makes this single item a singleton tuple
-        db_name: tuple = ('asgs',)
-
-        # create a DB connection object
-        db_info: PGImplementation = PGImplementation(db_name)
-
         # try to make the call for records
         job_data = db_info.get_job_defs()
 
@@ -315,13 +307,6 @@ async def get_terria_map_catalog_data(grid_type: Union[str, None] = Query(defaul
     status_code: int = 200
 
     try:
-        # specify the DB to get a connection
-        # note the extra comma makes this single item a singleton tuple
-        db_name: tuple = ('apsviz',)
-
-        # create a DB connection object
-        db_info: PGImplementation = PGImplementation(db_name)
-
         # init the kwargs variable
         kwargs: dict = {}
 
@@ -402,13 +387,6 @@ async def get_terria_map_catalog_data_file(file_name: Union[str, None] = Query(d
     temp_file_path: str = os.path.join(temp_file_path, file_name)
 
     try:
-        # specify the DB to get a connection
-        # note the extra comma makes this single item a singleton tuple
-        db_name: tuple = ('apsviz',)
-
-        # create a DB connection object
-        db_info: PGImplementation = PGImplementation(db_name)
-
         # try to make the call for records
         ret_val: dict = db_info.get_terria_map_catalog_data(**kwargs)
 
@@ -473,13 +451,6 @@ async def get_the_run_list():
     status_code = 200
 
     try:
-        # specify the DB to get a connection
-        # note the extra comma makes this single item a singleton tuple
-        db_name: tuple = ('asgs',)
-
-        # create a DB connection object
-        db_info: PGImplementation = PGImplementation(db_name)
-
         # get the run records
         ret_val = db_info.get_run_list()
 
@@ -519,15 +490,8 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
     # is this a valid instance id
     if instance_id > 0:
         try:
-            # specify the DB to get a connection
-            # note the extra comma makes this single item a singleton tuple
-            db_name: tuple = ('asgs',)
-
-            # create a DB connection object
-            db_info: PGImplementation = PGImplementation(db_name)
-
             # try to make the update
-            db_info.update_run_status(instance_id, uid, status.value)
+            db_info_no_auto_commit.update_run_status(instance_id, uid, status.value)
 
             # return a success message
             ret_val = f'The status of run {instance_id}/{uid} has been set to {status}'
@@ -575,13 +539,6 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
 
         # makesure that the input params are legit
         if version_pattern.search(version):
-            # specify the DB to get a connection
-            # note the extra comma makes this single item a singleton tuple
-            db_name: tuple = ('asgs',)
-
-            # create a DB connection object
-            db_info: PGImplementation = PGImplementation(db_name)
-
             # make the update. fix the job name (hyphen) so it matches the DB format
             db_info.update_job_image_version(JobTypeName(job_type_name).value + '-',
                                              image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version)
@@ -647,13 +604,6 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
 
             # did we get a good type id
             if next_job_type_name is not None:
-                # specify the DB to get a connection
-                # note the extra comma makes this single item a singleton tuple
-                db_name: tuple = ('asgs',)
-
-                # create a DB connection object
-                db_info: PGImplementation = PGImplementation(db_name)
-
                 # prep the record to update key. complete does not have a hyphen
                 if job_type_name != 'complete':
                     job_type_name += '-'
