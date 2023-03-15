@@ -73,6 +73,7 @@ class JobTypeName(str, Enum):
     GEOTIFF2COG_JOB = 'geotiff2cog-job'
     HAZUS = 'hazus'
     LOAD_GEO_SERVER_JOB = 'load-geo-server-job'
+    LOAD_GEO_SERVER_S3_JOB = 'load-geo-server-s3-job'
     OBS_MOD_AST_JOB = 'obs-mod-ast-job'
     STAGING = 'staging'
 
@@ -90,6 +91,7 @@ class NextJobTypeName(str, Enum):
     GEOTIFF2COG_JOB = 'geotiff2cog-job'
     HAZUS = 'hazus'
     LOAD_GEO_SERVER_JOB = 'load-geo-server-job'
+    LOAD_GEO_SERVER_S3_JOB = 'load-geo-server-s3-job'
     OBS_MOD_AST_JOB = 'obs-mod-ast-job'
     STAGING = 'staging'
 
