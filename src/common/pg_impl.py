@@ -22,15 +22,20 @@ class PGImplementation(PGUtilsMultiConnect):
         which has all the connection and cursor handling.
     """
 
-    def __init__(self, db_names: tuple, auto_commit=True):
-        # get the log level and directory from the environment.
-        log_level, log_path = LoggingUtil.prep_for_logging()
+    def __init__(self, db_names: tuple, _logger=None, _auto_commit=True):
+        # if a reference to a logger passed in use it
+        if _logger is not None:
+            # get a handle to a logger
+            self.logger = _logger
+        else:
+            # get the log level and directory from the environment.
+            log_level, log_path = LoggingUtil.prep_for_logging()
 
-        # create a logger
-        self.logger = LoggingUtil.init_logging("APSViz.Settings.PGImplementation", level=log_level, line_format='medium', log_file_path=log_path)
+            # create a logger
+            self.logger = LoggingUtil.init_logging("APSViz.Settings.PGImplementation", level=log_level, line_format='medium', log_file_path=log_path)
 
         # init the base class
-        PGUtilsMultiConnect.__init__(self, 'APSViz.Settings', db_names, auto_commit)
+        PGUtilsMultiConnect.__init__(self, 'APSViz.Settings', db_names, _logger=self.logger, _auto_commit=_auto_commit)
 
     def __del__(self):
         """
@@ -54,7 +59,7 @@ class PGImplementation(PGUtilsMultiConnect):
         # get the data
         ret_val = self.exec_sql('asgs', sql)
 
-        # get the data
+        # return the data
         return ret_val
 
     def get_job_order(self, workflow_type: str):
@@ -69,7 +74,7 @@ class PGImplementation(PGUtilsMultiConnect):
         # get the data
         ret_val = self.exec_sql('asgs', sql)
 
-        # get the data
+        # return the data
         return ret_val
 
     def reset_job_order(self, workflow_type_name: str) -> bool:
@@ -186,7 +191,11 @@ class PGImplementation(PGUtilsMultiConnect):
         sql = f"SELECT public.update_next_job_for_job('{job_name}', {next_process_id}, '{workflow_type_name}')"
 
         # run the SQL
-        self.exec_sql('asgs', sql)
+        ret_val = self.exec_sql('asgs', sql)
+
+        # if there were no errors, commit the updates
+        if ret_val > -1:
+            self.commit('asgs')
 
     def update_job_image_version(self, job_name: str, image: str):
         """
@@ -201,7 +210,11 @@ class PGImplementation(PGUtilsMultiConnect):
         sql = f"SELECT public.update_job_image('{job_name}', '{image}')"
 
         # run the SQL
-        self.exec_sql('asgs', sql)
+        ret_val = self.exec_sql('asgs', sql)
+
+        # if there were no errors, commit the updates
+        if ret_val > -1:
+            self.commit('asgs')
 
     def update_run_status(self, instance_id: int, uid: str, status: str):
         """
@@ -218,7 +231,11 @@ class PGImplementation(PGUtilsMultiConnect):
         sql = f"SELECT public.set_config_item({instance_id}, '{uid}', 'supervisor_job_status', '{status}')"
 
         # run the SQL
-        self.exec_sql('asgs', sql)
+        ret_val = self.exec_sql('asgs', sql)
+
+        # if there were no errors, commit the updates
+        if ret_val > -1:
+            self.commit('asgs')
 
     def get_pull_down_data(self, **kwargs) -> dict:
         """
