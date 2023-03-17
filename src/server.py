@@ -26,7 +26,7 @@ from src.common.logger import LoggingUtil
 from src.common.pg_impl import PGImplementation
 
 # set the app version
-APP_VERSION = 'v0.3.2'
+APP_VERSION = 'v0.3.3'
 
 # declare the FastAPI details
 APP = FastAPI(title='APSVIZ Settings', version=APP_VERSION)
@@ -43,9 +43,6 @@ APP.add_middleware(CORSMiddleware, allow_origins=['*'], allow_credentials=True, 
 # specify the DB to get a connection
 # note the extra comma makes this single item a singleton tuple
 db_names: tuple = ('apsviz', 'asgs')
-
-# create a DB connection object
-db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
 
 # create a DB connection object
 db_info_no_auto_commit: PGImplementation = PGImplementation(db_names, _logger=logger, _auto_commit=False)
@@ -169,6 +166,9 @@ async def display_job_order(workflow_type_name: WorkflowTypeName) -> json:
     status_code = 200
 
     try:
+        # create a DB connection object
+        db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
+
         # try to make the call for records
         ret_val = db_info.get_job_order(WorkflowTypeName(workflow_type_name).value)
 
@@ -214,6 +214,9 @@ async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
         if ret_val:
             raise Exception(f'Failure trying to reset the {WorkflowTypeName(workflow_type_name).value} job order. Error: {ret_val}')
 
+        # create a DB connection object
+        db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
+
         # get the new job order
         job_order = db_info.get_job_order(WorkflowTypeName(workflow_type_name).value)
 
@@ -249,6 +252,9 @@ async def display_job_definitions() -> json:
     job_config_data: dict = {}
 
     try:
+        # create a DB connection object
+        db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
+
         # try to make the call for records
         job_data = db_info.get_job_defs()
 
@@ -321,6 +327,9 @@ async def get_terria_map_catalog_data(grid_type: Union[str, None] = Query(defaul
             # add this parm to the list
             kwargs.update({param: 'null' if not locals()[param] else f"'{locals()[param]}'"})
 
+        # create a DB connection object
+        db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
+
         # try to make the call for records
         ret_val: dict = db_info.get_terria_map_catalog_data(**kwargs)
     except Exception:
@@ -389,6 +398,9 @@ async def get_terria_map_catalog_data_file(file_name: Union[str, None] = Query(d
     temp_file_path: str = os.path.join(temp_file_path, file_name)
 
     try:
+        # create a DB connection object
+        db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
+
         # try to make the call for records
         ret_val: dict = db_info.get_terria_map_catalog_data(**kwargs)
 
@@ -453,6 +465,9 @@ async def get_the_run_list():
     status_code = 200
 
     try:
+        # create a DB connection object
+        db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
+
         # get the run records
         ret_val = db_info.get_run_list()
 
@@ -492,6 +507,9 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
     # is this a valid instance id
     if instance_id > 0:
         try:
+            # create a DB connection object
+            db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
+
             # try to make the update
             db_info_no_auto_commit.update_run_status(instance_id, uid, status.value)
 
@@ -541,6 +559,9 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
 
         # makesure that the input params are legit
         if version_pattern.search(version):
+            # create a DB connection object
+            db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
+
             # make the update. fix the job name (hyphen) so it matches the DB format
             db_info.update_job_image_version(JobTypeName(job_type_name).value + '-',
                                              image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version)
@@ -609,6 +630,9 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
                 # prep the record to update key. complete does not have a hyphen
                 if job_type_name != 'complete':
                     job_type_name += '-'
+
+                # create a DB connection object
+                db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
 
                 # make the update
                 db_info.update_next_job_for_job(job_type_name, next_job_type_id, WorkflowTypeName(workflow_type_name).value)
