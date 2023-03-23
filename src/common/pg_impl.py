@@ -137,33 +137,6 @@ class PGImplementation(PGUtilsMultiConnect):
         # return to the caller
         return failed
 
-    def get_terria_map_catalog_data(self, **kwargs):
-        """
-        gets the catalog data for the terria map UI
-
-        :return:
-        """
-        # init the return
-        catalog_list: dict = {}
-
-        # create the sql
-        sql: str = f"SELECT public.get_terria_data_json(_grid_type:={kwargs['grid_type']}, _event_type:={kwargs['event_type']}, " \
-                   f"_instance_name:={kwargs['instance_name']}, _run_date:={kwargs['run_date']}, _end_date:={kwargs['end_date']}, " \
-                   f"_limit:={kwargs['limit']}, _met_class:={kwargs['met_class']}, _storm_name:={kwargs['storm_name']}, " \
-                   f"_cycle:={kwargs['cycle']}, _advisory_number:={kwargs['advisory_number']})"
-
-        # get the layer list
-        catalog_list = self.exec_sql('apsviz', sql)
-
-        # get the pull-down data using the above filtering mechanisms
-        pulldown_data: dict = self.get_pull_down_data(**kwargs)
-
-        # merge the pulldown data to the catalog list
-        catalog_list.update({'pulldown_data': pulldown_data})
-
-        # return the data
-        return catalog_list
-
     def get_run_list(self):
         """
         gets the last 100 job runs
