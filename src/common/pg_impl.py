@@ -209,24 +209,3 @@ class PGImplementation(PGUtilsMultiConnect):
         # if there were no errors, commit the updates
         if ret_val > -1:
             self.commit('asgs')
-
-    def get_pull_down_data(self, **kwargs) -> dict:
-        """
-        gets the pulldown data given the list of filtering mechanisms passed.
-
-        :param kwargs:
-        :return:
-        """
-        # init the return value
-        pulldown_data: dict = {}
-
-        # get the pull-down data
-        sql = f"SELECT public.get_terria_pulldown_data(_grid_type:={kwargs['grid_type']}, _event_type:={kwargs['event_type']}, " \
-              f"_instance_name:={kwargs['instance_name']}, _met_class:={kwargs['met_class']}, _storm_name:={kwargs['storm_name']}, " \
-              f"_cycle:={kwargs['cycle']}, _advisory_number:={kwargs['advisory_number']});"
-
-        # get the pulldown data
-        pulldown_data = self.exec_sql('apsviz', sql)
-
-        # return the full dataset to the caller
-        return pulldown_data
