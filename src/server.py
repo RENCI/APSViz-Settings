@@ -39,7 +39,7 @@ APP.add_middleware(CORSMiddleware, allow_origins=['*'], allow_credentials=True, 
 
 # specify the DB to get a connection
 # note the extra comma makes this single item a singleton tuple
-db_names: tuple = ('apsviz', 'asgs')
+db_names: tuple = ('asgs',)
 
 # create a DB connection object
 db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
