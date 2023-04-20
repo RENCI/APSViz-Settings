@@ -10,6 +10,7 @@
 """
 
 import json
+import os
 import re
 from pathlib import Path
 
@@ -23,7 +24,7 @@ from src.common.logger import LoggingUtil
 from src.common.pg_impl import PGImplementation
 
 # set the app version
-APP_VERSION = 'v0.3.11'
+APP_VERSION = os.getenv('APP_VERSION', 'Version number not set')
 
 # declare the FastAPI details
 APP = FastAPI(title='APSVIZ Settings', version=APP_VERSION)
