@@ -24,10 +24,10 @@ from src.common.logger import LoggingUtil
 from src.common.pg_impl import PGImplementation
 
 # set the app version
-APP_VERSION = os.getenv('APP_VERSION', 'Version number not set')
+app_version = os.getenv('APP_VERSION', 'Version number not set')
 
 # declare the FastAPI details
-APP = FastAPI(title='APSVIZ Settings', version=APP_VERSION)
+APP = FastAPI(title='APSVIZ Settings', version=app_version)
 
 # get the log level and directory from the environment.
 log_level, log_path = LoggingUtil.prep_for_logging()
