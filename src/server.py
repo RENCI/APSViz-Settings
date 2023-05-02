@@ -120,7 +120,7 @@ image_repo_to_repo_name: dict = {'renciorg': 'renciorg', 'containers.renci.org':
 
 # declare the component job type image name
 job_type_to_image_name: dict = {'adcirc2cog-tiff-job': '/adcirc2cog:', 'adcirctime-to-cog-job': '/adcirctime2cogs:',
-                                'ast-run-harvester-job': '/ast_run_harvester:', 'collab-data-sync-job': '/apsviz-collab-sync',
+                                'ast-run-harvester-job': '/ast_run_harvester:', 'collab-data-sync-job': '/apsviz-collab-sync:',
                                 'final-staging-job': '/stagedata:', 'geotiff2cog-job': '/adcirc2cog: ', 'hazus': '/adras:',
                                 'load-geo-server-job': '/load_geoserver:', 'load-geo-server-s3-job': '/load_geoserver:',
                                 'obs-mod-ast-job': '/ast_supp:', 'staging': '/stagedata:'}
