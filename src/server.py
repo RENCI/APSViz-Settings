@@ -66,6 +66,7 @@ class JobTypeName(str, Enum):
     """
     ADCIRC2COG_TIFF_JOB = 'adcirc2cog-tiff-job'
     ADCIRCTIME_TO_COG_JOB = 'adcirctime-to-cog-job'
+    ADCIRC_TO_KALPANA_COG = 'adcirc-to-kalpana-cog'
     AST_RUN_HARVESTER_JOB = 'ast-run-harvester-job'
     COLLAB_DATA_SYNC = 'collab-data-sync-job'
     FINAL_STAGING_JOB = 'final-staging-job'
@@ -84,6 +85,7 @@ class NextJobTypeName(str, Enum):
     """
     ADCIRC2COG_TIFF_JOB = 'adcirc2cog-tiff-job'
     ADCIRCTIME_TO_COG_JOB = 'adcirctime-to-cog-job'
+    ADCIRC_TO_KALPANA_COG = 'adcirc-to-kalpana-cog'
     AST_RUN_HARVESTER_JOB = 'ast-run-harvester-job'
     COLLAB_DATA_SYNC = 'collab-data-sync-job'
     COMPLETE = 'complete'
@@ -120,15 +122,15 @@ image_repo_to_repo_name: dict = {'renciorg': 'renciorg', 'containers.renci.org':
 
 # declare the component job type image name
 job_type_to_image_name: dict = {'adcirc2cog-tiff-job': '/adcirc2cog:', 'adcirctime-to-cog-job': '/adcirctime2cogs:',
-                                'ast-run-harvester-job': '/ast_run_harvester:', 'collab-data-sync-job': '/apsviz-collab-sync:',
-                                'final-staging-job': '/stagedata:', 'geotiff2cog-job': '/adcirc2cog: ', 'hazus': '/adras:',
-                                'load-geo-server-job': '/load_geoserver:', 'load-geo-server-s3-job': '/load_geoserver:',
-                                'obs-mod-ast-job': '/ast_supp:', 'staging': '/stagedata:'}
+                                'adcirc-to-kalpana-cog': '/adcirc-to-kalpana-cog-job:', 'ast-run-harvester-job': '/ast_run_harvester:',
+                                'collab-data-sync-job': '/apsviz-collab-sync:', 'final-staging-job': '/stagedata:',
+                                'geotiff2cog-job': '/adcirc2cog: ', 'hazus': '/adras:', 'load-geo-server-job': '/load_geoserver:',
+                                'load-geo-server-s3-job': '/load_geoserver:', 'obs-mod-ast-job': '/ast_supp:', 'staging': '/stagedata:'}
 
 # declare job name to id
-job_type_name_to_id: dict = {"adcirc2cog-tiff-job": 23, 'adcirctime-to-cog-job': 26, 'ast-run-harvester-job': 27, 'collab-data-sync-job': 29,
-                             "complete": 21, "final-staging-job": 20, "geotiff2cog-job": 24, "hazus": 12, "load-geo-server-job": 19,
-                             "load-geo-server-s3-job": 28, "obs-mod-ast-job": 25, "staging": 11}
+job_type_name_to_id: dict = {"adcirc2cog-tiff-job": 23, 'adcirctime-to-cog-job': 26, 'adcirc-to-kalpana-cog': 30, 'ast-run-harvester-job': 27,
+                             'collab-data-sync-job': 29, "complete": 21, "final-staging-job": 20, "geotiff2cog-job": 24, "hazus": 12,
+                             "load-geo-server-job": 19, "load-geo-server-s3-job": 28, "obs-mod-ast-job": 25, "staging": 11}
 
 
 def get_log_file_list(hostname):
