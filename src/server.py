@@ -66,7 +66,7 @@ class JobTypeName(str, Enum):
     """
     ADCIRC2COG_TIFF_JOB = 'adcirc2cog-tiff-job'
     ADCIRCTIME_TO_COG_JOB = 'adcirctime-to-cog-job'
-    ADCIRC_TO_KALPANA_COG = 'adcirc-to-kalpana-cog'
+    ADCIRC_TO_KALPANA_COG_JOB = 'adcirc-to-kalpana-cog-job'
     AST_RUN_HARVESTER_JOB = 'ast-run-harvester-job'
     COLLAB_DATA_SYNC = 'collab-data-sync-job'
     FINAL_STAGING_JOB = 'final-staging-job'
@@ -85,7 +85,7 @@ class NextJobTypeName(str, Enum):
     """
     ADCIRC2COG_TIFF_JOB = 'adcirc2cog-tiff-job'
     ADCIRCTIME_TO_COG_JOB = 'adcirctime-to-cog-job'
-    ADCIRC_TO_KALPANA_COG = 'adcirc-to-kalpana-cog'
+    ADCIRC_TO_KALPANA_COG_JOB = 'adcirc-to-kalpana-cog-job'
     AST_RUN_HARVESTER_JOB = 'ast-run-harvester-job'
     COLLAB_DATA_SYNC = 'collab-data-sync-job'
     COMPLETE = 'complete'
