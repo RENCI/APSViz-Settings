@@ -89,25 +89,26 @@ class PGImplementation(PGUtilsMultiConnect):
             'ASGS': [
                 # record id, next job type
                 # -------------------------
-                '1, 12',   # staging step
-                '13, 25',  # hazus step
-                '17, 23',  # obs-mod ast step
-                '15, 26',  # adcirc to cog step
-                '18, 24',  # adcirc time to cog step
-                '16, 19',  # geotiff to cog step
-                '11, 20',  # load geo server step
-                '14, 21'   # final staging step
+                '1, 23',  # staging
+                '15, 30',  # adcirc2cog-tiff
+                '21, 27',  # adcirc-to-kalpana-cog
+                '19, 25',  # ast-run-harvester
+                '17, 24',  # obs-mod-ast
+                '16, 19',  # geotiff2cog
+                '11, 20',  # load-geo-server
+                '14, 21'  # final-staging
                 ],
             'ECFLOW': [
-                # job id, next job type
+                # record id, next job type
                 # -------------------------
-                '101, 25',  # staging step
-                '106, 23',  # obs-mod ast step
-                '104, 26',  # adcirc to cog step
-                '108, 24',  # adcirc time to cog step
-                '105, 19',  # geotiff to cog step
-                '102, 20',  # load geo server step
-                '103, 21'   # final staging step
+                '101, 23',  # staging
+                '104, 30',  # adcirc2cog-tiff
+                '111, 25',  # adcirc-to-kalpana-cog
+                '106, 24',  # obs-mod-ast
+                '105, 19',  # geotiff2cog
+                '102, 29',  # load-geo-server
+                '110, 20',  # collab-data-sync
+                '103, 21'  # final-staging
                 ],
             'HECRAS': [
                 '201, 21',  # load geo server step
