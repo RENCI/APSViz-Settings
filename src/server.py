@@ -195,13 +195,15 @@ async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
     resets the job process order to the default for the workflow selected.
 
     The normal sequence of ASGS jobs are:
-    staging -> hazus -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COGs geo-tiffs -> load geoserver -> final staging -> complete
+    staging -> adcirc to COGs -> adcirc Kalpana to COGs -> ast run harvester -> adcirc Time to COGs -> obs-mod-ast -> compute COGs geo-tiffs ->
+    load geoserver -> final staging -> complete
 
     The normal sequence of ECFLOW jobs are:
-    staging -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COG geo-tiffs -> load geoserver -> final staging -> complete
+    staging -> adcirc to COGs -> adcirc Kalpana to COGs -> adcirc Time to COGs -> obs-mod-ast -> compute COGs geo-tiffs -> load geoserver ->
+    collaborator data sync -> final staging -> complete
 
     The normal sequence of HECRAS jobs are
-    load geoserver -> complete
+    load geoserver from S3 -> complete
 
     """
 
@@ -458,13 +460,15 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
     process name.
 
     The normal sequence of ASGS jobs are:
-    staging -> hazus -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COGs geo-tiffs -> load geo server -> final staging -> complete
+    staging -> adcirc to COGs -> adcirc Kalpana to COGs -> ast run harvester -> adcirc Time to COGs -> obs-mod-ast -> compute COGs geo-tiffs ->
+    load geoserver -> final staging -> complete
 
     The normal sequence of ECFLOW jobs are:
-    staging -> obs-mod-ast -> adcirc to COGs -> adcirc Time to COGs -> compute COG geo-tiffs -> load geo server -> final staging -> complete
+    staging -> adcirc to COGs -> adcirc Kalpana to COGs -> adcirc Time to COGs -> obs-mod-ast -> compute COGs geo-tiffs -> load geoserver ->
+    collaborator data sync -> final staging -> complete
 
     The normal sequence of HECRAS jobs are
-    load geoserver -> complete
+    load geoserver from S3 -> complete
     """
     # init the returned html status code
     status_code = 200
