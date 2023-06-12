@@ -9,7 +9,7 @@ SPDX-License-Identifier: MIT
 ![image not found](renci-logo.png "RENCI")
 
 # APSViz Settings
-Website/services that allow access to the APSViz Supervisor configuration.
+A Web application/services to view/modify the [APSViz-Supervisor](https://github.com/RENCI/APSVIZ-Supervisor) run-time configuration as well as to monitor operational state.
 
 #### Licenses...
 [![MIT License](https://img.shields.io/badge/License-MIT-orange.svg)](https://github.com/RENCI/APSVIZ-Settings/blob/master/LICENSE)
@@ -21,3 +21,12 @@ Website/services that allow access to the APSViz Supervisor configuration.
 #### Build status...
 [![PyLint the codebase](https://github.com/RENCI/APSVIZ-Settings/actions/workflows/pylint.yml/badge.svg)](https://github.com/RENCI/APSVIZ-Settings/actions/workflows/pylint.yml)
 [![Build and push the Docker image](https://github.com/RENCI/APSVIZ-Settings/actions/workflows/image-push.yml/badge.svg)](https://github.com/RENCI/APSVIZ-Settings/actions/workflows/image-push.yml)
+
+## Description
+This product utilizes a FASTAPI interface to allow access to the [APSViz-Supervisor](https://github.com/RENCI/APSVIZ-Supervisor) configuration settings and status.
+
+There are GitHub actions to maintain code quality in this repo:
+ - Pylint (minimum score of 10/10 to pass),
+ - Build/publish a Docker image.
+
+Helm/k8s charts for this product are available at: [APSViz-Helm](https://github.com/RENCI/apsviz-helm/tree/main/supervisor-settings).
