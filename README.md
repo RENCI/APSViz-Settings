@@ -12,11 +12,11 @@ SPDX-License-Identifier: MIT
 A Web application/services to view/modify the [APSViz-Supervisor](https://github.com/RENCI/APSVIZ-Supervisor) run-time configuration as well as to monitor operational state.
 
 #### Licenses...
-[![MIT License](https://img.shields.io/badge/License-MIT-orange.svg)](https://github.com/RENCI/APSVIZ-Settings/blob/master/LICENSE)
+[![MIT License](https://img.shields.io/badge/License-MIT-orange.svg)](https://github.com/RENCI/APSVIZ-Settings/tree/master/LICENSE)
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
-[![RENCI License](https://img.shields.io/badge/License-RENCI-blue.svg)](https://renci.org/)
+[![RENCI License](https://img.shields.io/badge/License-RENCI-blue.svg)](https://www.renci.org/)
 #### Components and versions...
-[![Python](https://img.shields.io/badge/Python-3.11.3-orange)](https://github.com/python/cpython)
+[![Python](https://img.shields.io/badge/Python-3.11.4-orange)](https://github.com/python/cpython)
 [![Linting Pylint](https://img.shields.io/badge/Pylint-%202.17.4-yellow)](https://github.com/PyCQA/pylint)
 #### Build status...
 [![PyLint the codebase](https://github.com/RENCI/APSVIZ-Settings/actions/workflows/pylint.yml/badge.svg)](https://github.com/RENCI/APSVIZ-Settings/actions/workflows/pylint.yml)
