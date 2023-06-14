@@ -76,7 +76,7 @@ class JobTypeName(str, Enum):
     LOAD_GEO_SERVER_S3_JOB = 'load-geo-server-s3-job'
     OBS_MOD_AST_JOB = 'obs-mod-ast-job'
     STAGING = 'staging'
-    TIMESERIESDB_INGEST = 'timeseriesdb-ingest'
+    TIMESERIESDB_INGEST_JOB = 'timeseriesdb-ingest-job'
 
 
 # declare the job type names
