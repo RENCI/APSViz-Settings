@@ -394,7 +394,7 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
         ret_val = f'Error: The instance id {instance_id} is invalid. An instance must be a non-zero integer.'
 
         # log the error
-        logger.ERROR(ret_val)
+        logger.error(ret_val)
 
         # set the status to a bad request
         status_code = 400
@@ -419,27 +419,41 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
     status_code = 200
 
     try:
-        # create a regex pattern for the version number
-        version_pattern = re.compile(r"(v\d\.+\d\.+\d)")
+        # get the image freeze env param
+        freeze_mode = check_freeze_status()
 
-        # makesure that the input params are legit
-        if version_pattern.search(version):
-            # make the update. fix the job name (hyphen) so it matches the DB format
-            db_info.update_job_image_version(JobTypeName(job_type_name).value + '-',
-                                             image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version)
+        # are we are not in freeze mode do real work
+        if not freeze_mode:
+            # create a regex pattern for the version number
+            version_pattern = re.compile(r"(v\d\.+\d\.+\d)")
 
-            # return a success message
-            ret_val = f"The docker repo/image:version for job name {job_type_name} has been set to " \
-                      f"{image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version}"
+            # makesure that the input params are legit
+            if version_pattern.search(version) or version.startswith('latest'):
+                # make the update. fix the job name (hyphen) so it matches the DB format
+                db_info.update_job_image_version(JobTypeName(job_type_name).value + '-',
+                                                 image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version)
+
+                # return a success message
+                ret_val = f"The docker repo/image:version for job name {job_type_name} has been set to " \
+                          f"{image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version}"
+            else:
+                # return a success message
+                ret_val = f"Error: The version {version} is invalid. Please use a value in the form of v<int>.<int>.<int>"
+
+                # log the error
+                logger.error(ret_val)
+
+                # set the status to a bad request
+                status_code = 400
         else:
             # return a success message
-            ret_val = f"Error: The version {version} is invalid. Please use a value in the form of v<int>.<int>.<int>"
+            ret_val = f"Error: Image update freeze is in effect."
 
             # log the error
-            logger.ERROR(ret_val)
+            logger.error(ret_val)
 
-            # set the status to a bad request
-            status_code = 400
+            # set the status to an unauthorized request
+            status_code = 401
 
     except Exception:
         # return a failure message
@@ -525,3 +539,15 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
 
     # return to the caller
     return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
+
+
+def check_freeze_status() -> bool:
+    """
+    checks to see if we are in image freeze mode.
+
+    """
+    # get the flag that indicates we are freezing the updating of image versions
+    freeze_mode: bool = os.path.exists(os.path.join(os.path.dirname(__file__), '../', str('freeze')))
+
+    # return to the caller
+    return freeze_mode
