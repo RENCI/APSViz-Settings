@@ -447,7 +447,7 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
                 status_code = 400
         else:
             # return a success message
-            ret_val = f"Error: Image update freeze is in effect."
+            ret_val = 'Error: Image update freeze is in effect.'
 
             # log the error
             logger.error(ret_val)
