@@ -12,9 +12,8 @@
 import json
 import os
 import re
-from pathlib import Path
 
-from enum import Enum
+from pathlib import Path
 
 from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,6 +21,7 @@ from fastapi.responses import JSONResponse, FileResponse
 
 from src.common.logger import LoggingUtil
 from src.common.pg_impl import PGImplementation
+from src.common.utils import GenUtils, WorkflowTypeName, ImageRepo, RunStatus, JobTypeName, NextJobTypeName
 
 # set the app version
 app_version = os.getenv('APP_VERSION', 'Version number not set')
@@ -29,14 +29,14 @@ app_version = os.getenv('APP_VERSION', 'Version number not set')
 # declare the FastAPI details
 APP = FastAPI(title='APSVIZ Settings', version=app_version)
 
+# declare app access details
+APP.add_middleware(CORSMiddleware, allow_origins=['*'], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
 # get the log level and directory from the environment.
 log_level, log_path = LoggingUtil.prep_for_logging()
 
 # create a logger
 logger = LoggingUtil.init_logging("APSVIZ.Settings", level=log_level, line_format='medium', log_file_path=log_path)
-
-# declare app access details
-APP.add_middleware(CORSMiddleware, allow_origins=['*'], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 # specify the DB to get a connection
 # note the extra comma makes this single item a singleton tuple
@@ -47,122 +47,6 @@ db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
 
 # create a DB connection object with auto-commit turned off
 db_info_no_auto_commit: PGImplementation = PGImplementation(db_names, _logger=logger, _auto_commit=False)
-
-
-# declare the supervisor workflow types
-class WorkflowTypeName(str, Enum):
-    """
-    Class enums for the supervisor workflow types
-    """
-    ASGS = 'ASGS'
-    ECFLOW = 'ECFLOW'
-    HECRAS = 'HECRAS'
-
-
-# declare the job type names
-class JobTypeName(str, Enum):
-    """
-    Class enum for k8s job names
-    """
-    ADCIRC2COG_TIFF_JOB = 'adcirc2cog-tiff-job'
-    ADCIRCTIME_TO_COG_JOB = 'adcirctime-to-cog-job'
-    ADCIRC_TO_KALPANA_COG_JOB = 'adcirc-to-kalpana-cog-job'
-    AST_RUN_HARVESTER_JOB = 'ast-run-harvester-job'
-    COLLAB_DATA_SYNC = 'collab-data-sync-job'
-    FINAL_STAGING_JOB = 'final-staging-job'
-    GEOTIFF2COG_JOB = 'geotiff2cog-job'
-    HAZUS = 'hazus'
-    LOAD_GEO_SERVER_JOB = 'load-geo-server-job'
-    LOAD_GEO_SERVER_S3_JOB = 'load-geo-server-s3-job'
-    OBS_MOD_AST_JOB = 'obs-mod-ast-job'
-    STAGING = 'staging'
-    TIMESERIESDB_INGEST_JOB = 'timeseriesdb-ingest-job'
-
-
-# declare the job type names
-class NextJobTypeName(str, Enum):
-    """
-    Class enum for k8s job names
-    """
-    ADCIRC2COG_TIFF_JOB = 'adcirc2cog-tiff-job'
-    ADCIRCTIME_TO_COG_JOB = 'adcirctime-to-cog-job'
-    ADCIRC_TO_KALPANA_COG_JOB = 'adcirc-to-kalpana-cog-job'
-    AST_RUN_HARVESTER_JOB = 'ast-run-harvester-job'
-    COLLAB_DATA_SYNC = 'collab-data-sync-job'
-    COMPLETE = 'complete'
-    FINAL_STAGING_JOB = 'final-staging-job'
-    GEOTIFF2COG_JOB = 'geotiff2cog-job'
-    HAZUS = 'hazus'
-    LOAD_GEO_SERVER_JOB = 'load-geo-server-job'
-    LOAD_GEO_SERVER_S3_JOB = 'load-geo-server-s3-job'
-    OBS_MOD_AST_JOB = 'obs-mod-ast-job'
-    STAGING = 'staging'
-    TIMESERIESDB_INGEST_JOB = 'timeseriesdb-ingest-job'
-
-
-# declare the run status types
-class RunStatus(str, Enum):
-    """
-    Class enum for job run statuses
-    """
-    NEW = 'new'
-    DEBUG = 'debug'
-    DO_NOT_RERUN = 'do not rerun'
-
-
-# declare the possible image repos
-class ImageRepo(str, Enum):
-    """
-    Class enum for image registries
-    """
-    CONTAINERS = 'containers.renci.org'
-    RENCIORG = 'renciorg'
-
-
-# declare the two potential image repos
-image_repo_to_repo_name: dict = {'renciorg': 'renciorg', 'containers.renci.org': 'containers.renci.org/eds'}
-
-# declare the component job type image name
-job_type_to_image_name: dict = {'adcirc2cog-tiff-job': '/adcirc2cog:', 'adcirctime-to-cog-job': '/adcirctime2cogs:',
-                                'adcirc-to-kalpana-cog-job': '/adcirc-to-kalpana-cog-job:', 'ast-run-harvester-job': '/ast_run_harvester:',
-                                'collab-data-sync-job': '/apsviz-collab-sync:', 'final-staging-job': '/stagedata:',
-                                'geotiff2cog-job': '/adcirc2cog: ', 'hazus': '/adras:', 'load-geo-server-job': '/load_geoserver:',
-                                'load-geo-server-s3-job': '/load_geoserver:', 'obs-mod-ast-job': '/ast_supp:', 'staging': '/stagedata:',
-                                'timeseriesdb-ingest-job': '/apsviz-timeseriesdb-ingest:'}
-
-# declare job name to id
-job_type_name_to_id: dict = {'adcirc2cog-tiff-job': 23, 'adcirctime-to-cog-job': 26, 'adcirc-to-kalpana-cog-job': 30, 'ast-run-harvester-job': 27,
-                             'collab-data-sync-job': 29, 'complete': 21, 'final-staging-job': 20, 'geotiff2cog-job': 24, 'hazus': 12,
-                             'load-geo-server-job': 19, 'load-geo-server-s3-job': 28, 'obs-mod-ast-job': 25, 'staging': 11,
-                             'timeseriesdb-ingest-job': 31}
-
-
-def get_log_file_list(hostname):
-    """
-    Gets all the log file path/names
-
-    :return:
-    """
-    # init the return
-    ret_val = {}
-
-    # init a file counter
-    counter = 0
-
-    # get the log path
-    log_file_path: str = LoggingUtil.get_log_path().replace('\\', '/')
-
-    # go through all the directories
-    for file_path in Path(log_file_path).rglob('*log*'):
-        # increment the counter
-        counter += 1
-
-        # save the absolute file path, endpoint URL, and file size in a dict
-        ret_val.update({f"{file_path.name}_{counter}": {'file_name': file_path.name, 'url': f'{hostname}/get_log_file/?log_file={file_path}',
-                                                        'file_size': f'{file_path.stat().st_size} bytes'}})
-
-    # return the list to the caller
-    return ret_val
 
 
 @APP.get('/get_job_order/{workflow_type_name}', status_code=200, response_model=None)
@@ -298,7 +182,7 @@ async def get_the_log_file_list(request: Request):
     """
 
     # return the list to the caller in JSON format
-    return JSONResponse(content={'Response': get_log_file_list(f'{request.base_url.scheme}://{request.base_url.netloc}')}, status_code=200,
+    return JSONResponse(content={'Response': GenUtils.get_log_file_list(f'{request.base_url.scheme}://{request.base_url.netloc}')}, status_code=200,
                         media_type="application/json")
 
 
@@ -420,7 +304,7 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
 
     try:
         # get the image freeze env param
-        freeze_mode = check_freeze_status()
+        freeze_mode = GenUtils.check_freeze_status()
 
         # are we are not in freeze mode do real work
         if not freeze_mode:
@@ -431,11 +315,12 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
             if version_pattern.search(version) or version.startswith('latest'):
                 # make the update. fix the job name (hyphen) so it matches the DB format
                 db_info.update_job_image_version(JobTypeName(job_type_name).value + '-',
-                                                 image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version)
+                                                 GenUtils.image_repo_to_repo_name[image_repo] + GenUtils.job_type_to_image_name[
+                                                     job_type_name] + version)
 
                 # return a success message
                 ret_val = f"The docker repo/image:version for job name {job_type_name} has been set to " \
-                          f"{image_repo_to_repo_name[image_repo] + job_type_to_image_name[job_type_name] + version}"
+                          f"{GenUtils.image_repo_to_repo_name[image_repo] + GenUtils.job_type_to_image_name[job_type_name] + version}"
             else:
                 # return a success message
                 ret_val = f"Error: The version {version} is invalid. Please use a value in the form of v<int>.<int>.<int>"
@@ -501,7 +386,7 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
             status_code = 500
         else:
             # convert the next job process name to an id
-            next_job_type_id = job_type_name_to_id.get(NextJobTypeName(next_job_type_name).value)
+            next_job_type_id = GenUtils.job_type_name_to_id.get(NextJobTypeName(next_job_type_name).value)
 
             # did we get a good type id
             if next_job_type_name is not None:
@@ -539,15 +424,3 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
 
     # return to the caller
     return JSONResponse(content={'Response': ret_val}, status_code=status_code, media_type="application/json")
-
-
-def check_freeze_status() -> bool:
-    """
-    checks to see if we are in image freeze mode.
-
-    """
-    # get the flag that indicates we are freezing the updating of image versions
-    freeze_mode: bool = os.path.exists(os.path.join(os.path.dirname(__file__), '../', str('freeze')))
-
-    # return to the caller
-    return freeze_mode
