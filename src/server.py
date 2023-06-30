@@ -206,7 +206,7 @@ async def get_the_log_file(log_file: str = Query('log_file')):
             return FileResponse(path=log_file_path, filename=log_file_path.name, media_type='text/plain')
 
     # if we get here return an error
-    return JSONResponse(content={'Response': 'Error - Log file does not exist.'}, status_code=500, media_type="application/json")
+    return JSONResponse(content={'Response': 'Error - Log file does not exist.'}, status_code=404, media_type="application/json")
 
 
 @APP.get("/get_run_list", status_code=200, response_model=None)
