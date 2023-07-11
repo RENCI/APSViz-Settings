@@ -311,6 +311,9 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
             # create a regex pattern for the version number
             version_pattern = re.compile(r"(v\d\.+\d\.+\d)")
 
+            # strip off any whitespace on the version
+            version = version.strip()
+
             # makesure that the input params are legit
             if version_pattern.search(version) or version.startswith('latest'):
                 # make the update. fix the job name (hyphen) so it matches the DB format
