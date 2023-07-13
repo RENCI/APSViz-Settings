@@ -15,13 +15,15 @@ import re
 
 from pathlib import Path
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Query, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 
 from src.common.logger import LoggingUtil
 from src.common.pg_impl import PGImplementation
 from src.common.utils import GenUtils, WorkflowTypeName, ImageRepo, RunStatus, JobTypeName, NextJobTypeName
+from src.common.security import Security
+from src.common.bearer import JWTBearer
 
 # set the app version
 app_version = os.getenv('APP_VERSION', 'Version number not set')
@@ -48,8 +50,11 @@ db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
 # create a DB connection object with auto-commit turned off
 db_info_no_auto_commit: PGImplementation = PGImplementation(db_names, _logger=logger, _auto_commit=False)
 
+# create a Security object
+security = Security()
 
-@APP.get('/get_job_order/{workflow_type_name}', status_code=200, response_model=None)
+
+@APP.get('/get_job_order/{workflow_type_name}', dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
 async def display_job_order(workflow_type_name: WorkflowTypeName) -> json:
     """
     Displays the job order for the workflow type selected.
@@ -77,7 +82,7 @@ async def display_job_order(workflow_type_name: WorkflowTypeName) -> json:
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
 
-@APP.get('/reset_job_order/{workflow_type_name}', status_code=200, response_model=None)
+@APP.get('/reset_job_order/{workflow_type_name}', dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
 async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
     """
     resets the job process order to the default for the workflow selected.
@@ -128,7 +133,7 @@ async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
     return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
 
-@APP.get('/get_job_defs', status_code=200, response_model=None)
+@APP.get('/get_job_defs', dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
 async def display_job_definitions() -> json:
     """
     Displays the job definitions for all workflows. Note that this list is in alphabetical order (not in job execute order).
@@ -174,7 +179,7 @@ async def display_job_definitions() -> json:
     return JSONResponse(content=job_config_data, status_code=status_code, media_type="application/json")
 
 
-@APP.get("/get_log_file_list", response_model=None)
+@APP.get("/get_log_file_list", dependencies=[Depends(JWTBearer(security))], response_model=None)
 async def get_the_log_file_list(request: Request):
     """
     Gets the log file list. each of these entries could be used in the get_log_file endpoint
@@ -186,7 +191,7 @@ async def get_the_log_file_list(request: Request):
                         media_type="application/json")
 
 
-@APP.get("/get_log_file/", response_model=None)
+@APP.get("/get_log_file/", dependencies=[Depends(JWTBearer(security))], response_model=None)
 async def get_the_log_file(log_file: str = Query('log_file')):
     """
     Gets the log file specified. This method only expects a properly named file.
@@ -209,7 +214,7 @@ async def get_the_log_file(log_file: str = Query('log_file')):
     return JSONResponse(content={'Response': 'Error - Log file does not exist.'}, status_code=404, media_type="application/json")
 
 
-@APP.get("/get_run_list", status_code=200, response_model=None)
+@APP.get("/get_run_list", dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
 async def get_the_run_list():
     """
     Gets the run information for the last 100 runs.
@@ -245,7 +250,7 @@ async def get_the_run_list():
 
 
 # sets the run.properties run status to 'new' for a job
-@APP.put('/instance_id/{instance_id}/uid/{uid}/status/{status}', status_code=200, response_model=None)
+@APP.put('/instance_id/{instance_id}/uid/{uid}/status/{status}', dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
 async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = RunStatus('new')):
     """
     Updates the run status of a selected job.
@@ -288,7 +293,8 @@ async def set_the_run_status(instance_id: int, uid: str, status: RunStatus = Run
 
 
 # Updates the image version for a job
-@APP.put('/image_repo/{image_repo}/job_type_name/{job_type_name}/image_version/{version}', status_code=200, response_model=None)
+@APP.put('/image_repo/{image_repo}/job_type_name/{job_type_name}/image_version/{version}', dependencies=[Depends(JWTBearer(security))],
+         status_code=200, response_model=None)
 async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_type_name: JobTypeName, version: str):
     """
     Updates a supervisor component image version label in the supervisor job run configuration.
@@ -358,8 +364,8 @@ async def set_the_supervisor_component_image_version(image_repo: ImageRepo, job_
 
 
 # Updates a supervisor component's next process.
-@APP.put('/workflow_type_name/{workflow_type_name}/job_type_name/{job_type_name}/next_job_type/{next_job_type_name}', status_code=200,
-         response_model=None)
+@APP.put('/workflow_type_name/{workflow_type_name}/job_type_name/{job_type_name}/next_job_type/{next_job_type_name}',
+         dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
 async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job_type_name: JobTypeName, next_job_type_name: NextJobTypeName):
     """
     Modifies the supervisor component's linked list of jobs. Select the workflow type, then select the job process name and the next job
