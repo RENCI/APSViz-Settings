@@ -18,6 +18,7 @@ A Web application/services to view/modify the [APSViz-Supervisor](https://github
 #### Components and versions...
 [![Python](https://img.shields.io/badge/Python-3.11.4-orange)](https://github.com/python/cpython)
 [![Linting Pylint](https://img.shields.io/badge/Pylint-%202.17.4-yellow)](https://github.com/PyCQA/pylint)
+[![Pytest](https://img.shields.io/badge/Pytest-%207.4.0-blue)](https://github.com/pytest-dev/pytest)
 #### Build status...
 [![PyLint the codebase](https://github.com/RENCI/APSVIZ-Settings/actions/workflows/pylint.yml/badge.svg)](https://github.com/RENCI/APSVIZ-Settings/actions/workflows/pylint.yml)
 [![Build and push the Docker image](https://github.com/RENCI/APSVIZ-Settings/actions/workflows/image-push.yml/badge.svg)](https://github.com/RENCI/APSVIZ-Settings/actions/workflows/image-push.yml)
