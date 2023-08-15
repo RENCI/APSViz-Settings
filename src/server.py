@@ -187,7 +187,7 @@ async def get_the_log_file_list(request: Request):
     """
 
     # return the list to the caller in JSON format
-    return JSONResponse(content={'Response': GenUtils.get_log_file_list(f'{request.base_url.scheme}://{request.base_url.netloc}')}, status_code=200,
+    return JSONResponse(content={'Response': GenUtils.get_log_file_list(f'https://{request.base_url.netloc}')}, status_code=200,
                         media_type="application/json")
 
 
