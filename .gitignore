@@ -10,3 +10,4 @@ src/__pycache__/
 /common/APSVIZ.Settings.log
 /common/APSVIZ.Settings.pg_utils.log
 /src/test/.pytest_cache/
+/src/common/APSVIZ.Settings.log
