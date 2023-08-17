@@ -15,7 +15,7 @@ import re
 
 from pathlib import Path
 
-from fastapi import FastAPI, Query, Request, Depends
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 
@@ -85,7 +85,7 @@ async def display_job_order(workflow_type_name: WorkflowTypeName) -> json:
 @APP.get('/reset_job_order/{workflow_type_name}', dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
 async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
     """
-    resets the job process order to the default for the workflow selected.
+    Resets the job process order to the default for the workflow selected.
 
     The normal sequence of ASGS jobs are:
     staging -> adcirc to COGs -> adcirc Kalpana to COGs -> ast run harvester -> adcirc Time to COGs -> obs-mod-ast -> compute COGs geo-tiffs ->
@@ -180,38 +180,48 @@ async def display_job_definitions() -> json:
 
 
 @APP.get("/get_log_file_list", dependencies=[Depends(JWTBearer(security))], response_model=None)
-async def get_the_log_file_list(request: Request):
+async def get_the_log_file_list(filter_param: str = '', search_backups: bool = False):
     """
-    Gets the log file list. each of these entries could be used in the get_log_file endpoint
+    Gets the log file list. An optional filter parameter (case-insensitive) can be used to search for targeted results.
 
     """
 
     # return the list to the caller in JSON format
-    return JSONResponse(content={'Response': GenUtils.get_log_file_list(f'https://{request.base_url.netloc}')}, status_code=200,
-                        media_type="application/json")
+    return JSONResponse(content={'Response': GenUtils.get_log_file_list(filter_param, search_backups)},
+                        status_code=200, media_type="application/json")
 
 
 @APP.get("/get_log_file/", dependencies=[Depends(JWTBearer(security))], response_model=None)
-async def get_the_log_file(log_file: str = Query('log_file')):
+async def get_the_log_file(log_file: str, search_backups: bool = False):
     """
     Gets the log file specified. This method only expects a properly named file.
 
     """
-    # get the path to the log files
-    log_dir = LoggingUtil.get_log_path()
+    # make sure we got a log file
+    if log_file:
+        # get the log file path
+        if search_backups:
+            # get the path to the archive directory
+            log_file_path = os.getenv('LOG_BACKUP_PATH', os.path.dirname(__file__))
+        else:
+            # init the log file path
+            log_file_path: str = LoggingUtil.get_log_path()
 
-    # turn the incoming log file into a path object
-    log_file_path = Path(log_file)
+        # get the full path to the file
+        target_log_file_path = os.path.join(log_file_path, log_file)
 
-    # loop through the log file directory
-    for real_log_file in Path(log_dir).rglob('*log*'):
-        # if the target file is found in the log directory
-        if real_log_file == log_file_path:
-            # return the file to the caller
-            return FileResponse(path=log_file_path, filename=log_file_path.name, media_type='text/plain')
+        # loop through the log file directory
+        for found_log_file in Path(log_file_path).rglob('*log*'):
+            # if the target file is found in the log directory
+            if target_log_file_path == str(found_log_file):
+                # return the file to the caller
+                return FileResponse(path=target_log_file_path, media_type='text/plain')
+
+        # if we get here return an error
+        return JSONResponse(content={'Response': 'Error - Log file does not exist.'}, status_code=404, media_type="application/json")
 
     # if we get here return an error
-    return JSONResponse(content={'Response': 'Error - Log file does not exist.'}, status_code=404, media_type="application/json")
+    return JSONResponse(content={'Response': 'Error - You must select a log file.'}, status_code=404, media_type="application/json")
 
 
 @APP.get("/get_run_list", dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
