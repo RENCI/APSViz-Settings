@@ -41,7 +41,7 @@ class GenUtils:
                                  'timeseriesdb-ingest-job': 31}
 
     @staticmethod
-    def get_log_file_list(hostname):
+    def get_log_file_list(filter_param: str = '', search_backups: bool = False):
         """
         Gets all the log file path/names
 
@@ -53,17 +53,32 @@ class GenUtils:
         # init a file counter
         counter = 0
 
-        # get the log path
-        log_file_path: str = LoggingUtil.get_log_path().replace('\\', '/')
+        # get the log file path
+        if search_backups:
+            # get the path to the archive directory
+            log_file_path = os.getenv('LOG_BACKUP_PATH', os.path.dirname(__file__))
+        else:
+            # init the log file path
+            log_file_path: str = LoggingUtil.get_log_path()
+
+        # if a filter param was declared make it a wildcard
+        if filter_param:
+            filter_param += '*'
 
         # go through all the directories
-        for file_path in Path(log_file_path).rglob('*log*'):
+        for file_path in Path(log_file_path).rglob(f"*{filter_param}log*"):
             # increment the counter
             counter += 1
 
+            # clean up the file path. this is only relevant to windows paths
+            final_path = str(file_path).replace(log_file_path, "")
+
             # save the absolute file path, endpoint URL, and file size in a dict
-            ret_val.update({f"{file_path.name}_{counter}": {'file_name': file_path.name, 'url': f'{hostname}/get_log_file/?log_file={file_path}',
-                                                            'file_size': f'{file_path.stat().st_size} bytes'}})
+            ret_val.update({f"{file_path.name}_{counter}": {'file_path': final_path[1:], 'file_size': f'{file_path.stat().st_size} bytes'}})
+
+        # if nothing was found return a message
+        if len(ret_val) == 0 and filter_param:
+            ret_val = {'Warning': f'Nothing found using your filter parameter ({filter_param[:-1]})'}
 
         # return the list to the caller
         return ret_val
