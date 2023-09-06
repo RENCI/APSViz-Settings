@@ -118,7 +118,7 @@ async def get_all_sv_component_versions() -> json:
                 image_name2 = namespace2[index].get(image_type).split('/')[-1]
 
                 # check to see if there are any version mismatches
-                if image_name0 == image_name1 or image_name0 != image_name2 or image_name1 != image_name2:
+                if image_name0 != image_name1 or image_name0 != image_name2 or image_name1 != image_name2:
                     # set the warning flag
                     status_msg = (
                         f'Mismatch found for {image_type}. '
