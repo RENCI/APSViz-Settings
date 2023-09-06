@@ -356,7 +356,7 @@ async def get_the_log_file(log_file: str, search_backups: bool = False):
             # if the target file is found in the log directory
             if target_log_file_path == str(found_log_file):
                 # return the file to the caller
-                return FileResponse(path=target_log_file_path, media_type='text/plain')
+                return FileResponse(path=target_log_file_path, filename=log_file, media_type='text/plain')
 
         # if we get here return an error
         return JSONResponse(content={'Response': 'Error - Log file does not exist.'}, status_code=404, media_type="application/json")
