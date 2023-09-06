@@ -96,44 +96,45 @@ async def get_all_sv_component_versions() -> json:
                 results.append(json.loads(data.text))
 
         # now that we have all the data output something human-readable
-        for key, vals in results[0].items():
-            # get a reference to the namespace
-            namespace0 = results[0].get(key)
-            namespace1 = results[1].get(key)
-            namespace2 = results[2].get(key)
+        # for each workflow type gather the steps. we use the first dataset as the reference
+        # for the workflow type and steps
+        for ref_type, ref_steps in results[0].items():
+            # get a reference to the workflow steps from the other namespaces
+            wf_steps_0 = results[1].get(ref_type)
+            wf_steps_1 = results[2].get(ref_type)
 
             # init the output of the namespace results
             image_list: list = []
 
-            # loop through the components
-            for index, component in enumerate(vals):
+            # loop through the workflow steps
+            for index, component in enumerate(ref_steps):
                 # get the component name
-                image_type = list(component.keys())[0]
+                component_name = list(component.keys())[0]
 
                 # init the message for the component status
                 status_msg: str = ''
 
-                # get the name of the image, less the container registry bit
-                image_name0 = namespace0[index].get(image_type).split('/')[-1]
-                image_name1 = namespace1[index].get(image_type).split('/')[-1]
-                image_name2 = namespace2[index].get(image_type).split('/')[-1]
+                # get the name of the image from the workflow step without the container registry bit
+                ref_image_name = ref_steps[index].get(component_name).split('/')[-1]
+                image_name_0 = wf_steps_0[index].get(component_name).split('/')[-1]
+                image_name_1 = wf_steps_1[index].get(component_name).split('/')[-1]
 
                 # check to see if there are any version mismatches
-                if image_name0 != image_name1 or image_name0 != image_name2 or image_name1 != image_name2:
+                if ref_image_name != image_name_0 or ref_image_name != image_name_1:
                     # set the warning flag
                     status_msg = (
-                        f'Mismatch found for {image_type} - '
-                        f'{namespaces[0]}: {image_name0.split(":")[-1]}, '
-                        f'{namespaces[1]}: {image_name1.split(":")[-1]}, '
-                        f'{namespaces[2]}: {image_name2.split(":")[-1]}')
+                        f'Mismatch found for {component_name} - '
+                        f'{namespaces[0]}: {ref_image_name.split(":")[-1]}, '
+                        f'{namespaces[1]}: {image_name_0.split(":")[-1]}, '
+                        f'{namespaces[2]}: {image_name_1.split(":")[-1]}')
                 else:
-                    status_msg = f'All namespace image versions match for {image_name0}'
+                    status_msg = f'All namespace image versions match for {ref_image_name}'
 
                 # save the data for this component
                 image_list.append(status_msg)
 
             # add the item to the return list
-            ret_val.append({key: image_list})
+            ret_val.append({ref_type: image_list})
 
     except Exception:
         # return a failure message
