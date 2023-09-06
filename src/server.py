@@ -12,6 +12,7 @@
 import json
 import os
 import re
+import requests
 
 from pathlib import Path
 
@@ -52,6 +53,145 @@ db_info_no_auto_commit: PGImplementation = PGImplementation(db_names, _logger=lo
 
 # create a Security object
 security = Security()
+
+
+@APP.get('/get_all_sv_component_versions', dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
+async def get_all_sv_component_versions() -> json:
+    """
+    displays the super-v component versions across all namespaces (AWS, RENCI prod/dev)
+
+    :return:
+    """
+    # init the returned html status code
+    status_code = 200
+
+    # init the intermediate and return values
+    results: list = []
+    ret_val: list = []
+
+    # get the web service endpoints and bearer token headers
+    endpoints: list = [
+        [os.getenv('AWS_SETTINGS_URL'), {'Content-Type': 'application/json', 'Authorization': f'Bearer {os.environ.get("AWS_BEARER_TOKEN")}'}],
+        [os.getenv('PRD_SETTINGS_URL'), {'Content-Type': 'application/json', 'Authorization': f'Bearer {os.environ.get("PRD_BEARER_TOKEN")}'}],
+        [os.getenv('DEV_SETTINGS_URL'), {'Content-Type': 'application/json', 'Authorization': f'Bearer {os.environ.get("DEV_BEARER_TOKEN")}'}]]
+
+    namespaces: list = ['AWS', 'PROD', 'DEV']
+
+    # start collecting data
+    try:
+        # fore each deployment
+        for item in endpoints:
+            # execute the post
+            data = requests.get(f'{item[0]}/get_sv_component_versions', headers=item[1], timeout=10)
+
+            # was the call unsuccessful
+            if data.status_code != 200:
+                # log the error
+                logger.error('Error %s: No component image version data for %s.', data.status_code, item[0])
+
+                # raise the issue
+                raise
+            else:
+                results.append(json.loads(data.text))
+
+        # now that we have all the data output something human-readable
+        for key, vals in results[0].items():
+            # get a reference to the namespace
+            namespace0 = results[0].get(key)
+            namespace1 = results[1].get(key)
+            namespace2 = results[2].get(key)
+
+            # init the output of the namespace results
+            image_list: list = []
+
+            # loop through the components
+            for index, component in enumerate(vals):
+                # get the component name
+                image_type = list(component.keys())[0]
+
+                # init the message for the component status
+                status_msg: str = ''
+
+                # get the name of the image, less the container registry bit
+                image_name0 = namespace0[index].get(image_type).split('/')[-1]
+                image_name1 = namespace1[index].get(image_type).split('/')[-1]
+                image_name2 = namespace2[index].get(image_type).split('/')[-1]
+
+                # check to see if there are any version mismatches
+                if image_name0 == image_name1 or image_name0 != image_name2 or image_name1 != image_name2:
+                    # set the warning flag
+                    status_msg = (
+                        f'Mismatch found for {image_type}. '
+                        f'{namespaces[0]}: {image_name0.split(":")[-1]}, '
+                        f'{namespaces[1]}: {image_name1.split(":")[-1]}, '
+                        f'{namespaces[2]}: {image_name2.split(":")[-1]}')
+                else:
+                    status_msg = f'All namespaces match - {image_name0}'
+
+                # save the data for this component
+                image_list.append(status_msg)
+
+            # add the item to the return list
+            ret_val.append({key: image_list})
+
+    except Exception:
+        # return a failure message
+        ret_val = [{'Error': 'Exception detected trying to get all the component versions.'}]
+
+        logger.exception('Exception: Request failure getting all component image versions.')
+
+        # set the status to a server error
+        status_code = 500
+
+    # return to the caller
+    return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
+
+
+@APP.get('/get_sv_component_versions', dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
+async def get_sv_component_versions() -> json:
+    """
+    gets the SV image versions for this namespace
+
+    :return:
+    """
+    # init the returned html status code
+    status_code = 200
+
+    # init the return
+    ret_val: dict = {}
+
+    try:
+        # try to make the call for records
+        job_defs: dict = db_info.get_job_defs()
+
+        # pull out the info needed for each workflow type
+        for workflow_type in job_defs:
+            # get the workflow type name
+            workflow_type_name = list(workflow_type.keys())[0]
+
+            # init a list for the step dicts
+            steps: list = []
+
+            # walk through the steps and grab the docker image version details
+            for step in workflow_type[workflow_type_name]:
+                # save the step image details
+                steps.append({list(step.keys())[0]: step.get(list(step.keys())[0])['IMAGE']})
+
+            # add the steps to this workflow type dict
+            ret_val.update({workflow_type_name: steps})
+
+    except Exception:
+        # return a failure message
+        ret_val = {'Error': 'Exception detected trying to get the component versions.'}
+
+        # log the exception
+        logger.exception(ret_val)
+
+        # set the status to a server error
+        status_code = 500
+
+    # return to the caller
+    return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
 
 
 @APP.get('/get_job_order/{workflow_type_name}', dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
@@ -139,7 +279,6 @@ async def display_job_definitions() -> json:
     Displays the job definitions for all workflows. Note that this list is in alphabetical order (not in job execute order).
 
     """
-
     # init the returned html status code
     status_code = 200
 
@@ -187,8 +326,8 @@ async def get_the_log_file_list(filter_param: str = '', search_backups: bool = F
     """
 
     # return the list to the caller in JSON format
-    return JSONResponse(content={'Response': GenUtils.get_log_file_list(filter_param, search_backups)},
-                        status_code=200, media_type="application/json")
+    return JSONResponse(content={'Response': GenUtils.get_log_file_list(filter_param, search_backups)}, status_code=200,
+                        media_type="application/json")
 
 
 @APP.get("/get_log_file/", dependencies=[Depends(JWTBearer(security))], response_model=None)
