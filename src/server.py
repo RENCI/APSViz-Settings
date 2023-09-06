@@ -75,22 +75,23 @@ async def get_all_sv_component_versions() -> json:
         [os.getenv('PRD_SETTINGS_URL'), {'Content-Type': 'application/json', 'Authorization': f'Bearer {os.environ.get("PRD_BEARER_TOKEN")}'}],
         [os.getenv('DEV_SETTINGS_URL'), {'Content-Type': 'application/json', 'Authorization': f'Bearer {os.environ.get("DEV_BEARER_TOKEN")}'}]]
 
+    # create a list of target namespaces
     namespaces: list = ['AWS', 'PROD', 'DEV']
 
     # start collecting data
     try:
         # fore each deployment
         for item in endpoints:
+            # create the URL
+            url = f'{item[0]}/get_sv_component_versions'
+
             # execute the post
             data = requests.get(f'{item[0]}/get_sv_component_versions', headers=item[1], timeout=10)
 
             # was the call unsuccessful
             if data.status_code != 200:
-                # log the error
-                logger.error('Error %s: No component image version data for %s.', data.status_code, item[0])
-
                 # raise the issue
-                raise
+                raise Exception(f'Failure to get image version data from: {url}. HTTP Error: {data.status_code}')
             else:
                 results.append(json.loads(data.text))
 
@@ -121,12 +122,12 @@ async def get_all_sv_component_versions() -> json:
                 if image_name0 != image_name1 or image_name0 != image_name2 or image_name1 != image_name2:
                     # set the warning flag
                     status_msg = (
-                        f'Mismatch found for {image_type}. '
+                        f'Mismatch found for {image_type} - '
                         f'{namespaces[0]}: {image_name0.split(":")[-1]}, '
                         f'{namespaces[1]}: {image_name1.split(":")[-1]}, '
                         f'{namespaces[2]}: {image_name2.split(":")[-1]}')
                 else:
-                    status_msg = f'All namespaces match - {image_name0}'
+                    status_msg = f'All namespace image versions match for {image_name0}'
 
                 # save the data for this component
                 image_list.append(status_msg)
