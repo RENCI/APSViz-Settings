@@ -365,6 +365,33 @@ async def get_the_log_file(log_file: str, search_backups: bool = False):
     return JSONResponse(content={'Response': 'Error - You must select a log file.'}, status_code=404, media_type="application/json")
 
 
+@APP.get("/get_run_properties", dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
+async def get_the_run_properties(instance_id: int, uid: str):
+    """
+    Gets the run properties for the run specified.
+
+    """
+    # init the returned html status code
+    status_code = 200
+
+    try:
+        # try to make the call for records
+        ret_val = db_info.get_run_props(instance_id, uid)
+
+    except Exception:
+        # return a failure message
+        ret_val = f'Exception detected trying to get the run properties for {instance_id}-{uid}.'
+
+        # log the exception
+        logger.exception(ret_val)
+
+        # set the status to a server error
+        status_code = 500
+
+    # return to the caller
+    return JSONResponse(content=ret_val, status_code=status_code, media_type="application/json")
+
+
 @APP.get("/get_run_list", dependencies=[Depends(JWTBearer(security))], status_code=200, response_model=None)
 async def get_the_run_list():
     """

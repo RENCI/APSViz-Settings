@@ -212,3 +212,25 @@ class PGImplementation(PGUtilsMultiConnect):
         # if there were no errors, commit the updates
         if ret_val > -1:
             self.commit('asgs')
+
+    def get_run_props(self, instance_id: int, uid: str):
+        """
+        gets the run properties for a run
+
+        :return:
+        """
+        # create the sql
+        sql: str = f"SELECT * FROM public.get_run_prop_items_json({instance_id}, '{uid}')"
+
+        # get the data
+        ret_val = self.exec_sql('asgs', sql)
+
+        # check the result
+        if ret_val == -1:
+            ret_val = ['Run not found']
+        else:
+            # replace with the data sorted by keys
+            ret_val[0]['run_data'] = {x: ret_val[0]['run_data'][x] for x in sorted(ret_val[0]['run_data'])}
+
+        # return the data
+        return ret_val[0]
