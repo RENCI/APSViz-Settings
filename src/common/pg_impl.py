@@ -94,7 +94,7 @@ class PGImplementation(PGUtilsMultiConnect):
                 '21, 27',  # adcirc-to-kalpana-cog
                 '19, 25',  # ast-run-harvester
                 '17, 24',  # obs-mod-ast
-                # '22, 21',  # timeseries_ingest
+                # '22, 21,  # timeseries_ingest
                 '16, 19',  # geotiff2cog
                 '11, 20',  # load-geo-server
                 '14, 21'  # final-staging
