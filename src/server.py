@@ -12,9 +12,9 @@
 import json
 import os
 import re
-import requests
 
 from pathlib import Path
+import requests
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -89,11 +89,11 @@ async def get_all_sv_component_versions() -> json:
             data = requests.get(f'{item[0]}/get_sv_component_versions', headers=item[1], timeout=10)
 
             # was the call unsuccessful
-            if data.status_code != 200:
+            if data.status_code == 200:
+                results.append(json.loads(data.text))
+            else:
                 # raise the issue
                 raise Exception(f'Failure to get image version data from: {url}. HTTP Error: {data.status_code}')
-            else:
-                results.append(json.loads(data.text))
 
         # now that we have all the data output something human-readable
         # for each workflow type gather the steps. we use the first dataset as the reference
