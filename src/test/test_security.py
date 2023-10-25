@@ -18,7 +18,7 @@ import pytest
 from src.common.security import Security
 
 
-#@pytest.mark.skip(reason="Local test only")
+# @pytest.mark.skip(reason="Local test only")
 def test_sign_jwt():
     """
     tests the creation of a JWT token
@@ -38,7 +38,7 @@ def test_sign_jwt():
     assert token and 'access_token' in token
 
 
-@pytest.mark.skip(reason="Local test only")
+# @pytest.mark.skip(reason="Local test only")
 def test_decode_jwt():
     """
     tests the decode and validation of a JWT token
@@ -66,7 +66,7 @@ def test_decode_jwt():
     assert not ret_val
 
 
-#@pytest.mark.skip(reason="Local test only")
+# @pytest.mark.skip(reason="Local test only")
 def test_access():
     """
     makes a secure request to the app running locally
