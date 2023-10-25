@@ -14,5 +14,4 @@ description: 'Allows for the altering of the APSVIZ supervisor app'
 servers:
 - description: Default server
   url: https://apsviz-settings.apps.renci.org
-termsOfService: http://robokop.renci.org:7055/tos?service_long=APSVIZ&provider_long=RENCI
 title: APSVIZ Settings
