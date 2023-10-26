@@ -110,7 +110,7 @@ class PGUtilsMultiConnect:
         :return:
         """
         # insure the env parameter prefix is uppercase
-        db_name: str = db_name.upper()
+        db_name: str = db_name.upper().replace('-', '_')
 
         # get configuration params from the env params
         user: str = os.environ.get(f'{db_name}_DB_USERNAME')
