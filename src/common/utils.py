@@ -160,3 +160,4 @@ class ImageRepo(str, Enum):
     """
     CONTAINERS = 'containers.renci.org'
     RENCIORG = 'renciorg'
+    AWS = '732457422609.dkr.ecr.us-east-2.amazonaws.com'
