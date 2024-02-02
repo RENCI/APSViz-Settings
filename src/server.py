@@ -44,7 +44,7 @@ logger = LoggingUtil.init_logging("APSVIZ.Settings", level=log_level, line_forma
 
 # specify the DB to get a connection
 # note the extra comma makes this single item a singleton tuple
-db_names: tuple = ('asgs',)
+db_names: tuple = ('apsviz',)
 
 # create a DB connection object
 db_info: PGImplementation = PGImplementation(db_names, _logger=logger)
@@ -230,17 +230,12 @@ async def reset_job_order(workflow_type_name: WorkflowTypeName) -> json:
     """
     Resets the job process order to the default for the workflow selected.
 
-    The normal sequence of ASGS jobs are:
-    staging -> adcirc to COGs -> adcirc Kalpana to COGs -> ast run harvester -> adcirc Time to COGs -> obs-mod-ast -> compute COGs geo-tiffs ->
-    load geoserver -> final staging -> complete
+    The normal sequence of ECFLOW jobs is:
+    staging -> ADCIRC to COG TIFFs -> ADCIRC Kalpana to COGs -> AST run harvester -> Obs/Mod AST -> Compute COGs to geo-TIFFs -> Timeseries ingest ->
+    Load geoserver -> Collaborator data sync -> Final staging -> Complete
 
-    The normal sequence of ECFLOW jobs are:
-    staging -> adcirc to COGs -> adcirc Kalpana to COGs -> adcirc Time to COGs -> obs-mod-ast -> compute COGs geo-tiffs -> load geoserver ->
-    collaborator data sync -> final staging -> complete
-
-    The normal sequence of HECRAS jobs are
-    load geoserver from S3 -> complete
-
+    The normal sequence of HECRAS jobs is
+    Load geoserver from S3 -> Complete
     """
 
     # init the returned html status code
@@ -550,16 +545,12 @@ async def set_the_supervisor_job_order(workflow_type_name: WorkflowTypeName, job
     Modifies the supervisor component's linked list of jobs. Select the workflow type, then select the job process name and the next job
     process name.
 
-    The normal sequence of ASGS jobs are:
-    staging -> adcirc to COGs -> adcirc Kalpana to COGs -> ast run harvester -> adcirc Time to COGs -> obs-mod-ast -> compute COGs geo-tiffs ->
-    load geoserver -> final staging -> complete
+    The normal sequence of ECFLOW jobs is:
+    staging -> ADCIRC to COG TIFFs -> ADCIRC Kalpana to COGs -> AST run harvester -> Obs/Mod AST -> Compute COGs to geo-TIFFs -> Timeseries ingest ->
+    Load geoserver -> Collaborator data sync -> Final staging -> Complete
 
-    The normal sequence of ECFLOW jobs are:
-    staging -> adcirc to COGs -> adcirc Kalpana to COGs -> adcirc Time to COGs -> obs-mod-ast -> compute COGs geo-tiffs -> load geoserver ->
-    collaborator data sync -> final staging -> complete
-
-    The normal sequence of HECRAS jobs are
-    load geoserver from S3 -> complete
+    The normal sequence of HECRAS jobs is
+    Load geoserver from S3 -> Complete
     """
     # init the returned html status code
     status_code = 200

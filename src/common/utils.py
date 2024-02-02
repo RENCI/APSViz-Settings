@@ -101,7 +101,6 @@ class WorkflowTypeName(str, Enum):
     """
     Class enums for the supervisor workflow names
     """
-    ASGS = 'ASGS'
     ECFLOW = 'ECFLOW'
     HECRAS = 'HECRAS'
 
