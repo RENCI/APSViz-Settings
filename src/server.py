@@ -104,6 +104,10 @@ async def get_all_sv_component_versions() -> json:
             wf_steps_0 = results[1].get(ref_type)
             wf_steps_1 = results[2].get(ref_type)
 
+            # if the workflow doesnt exist in each namespace skip the comparison
+            if wf_steps_0 is None or wf_steps_1 is None:
+                continue
+
             # init the output of the namespace results
             image_list: list = []
 

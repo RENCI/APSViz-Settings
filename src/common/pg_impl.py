@@ -92,13 +92,14 @@ class PGImplementation(PGUtilsMultiConnect):
                 # -------------------------
                 '101, 23',  # staging
                 '104, 30',  # adcirc2cog-tiff
-                '111, 25',  # adcirc-to-kalpana-cog
+                '111, 27',  # adcirc-to-kalpana-cog
+                '108, 25',  # ast-run-harvester
                 '106, 24',  # obs-mod-ast
-                '112, 21',  # timeseries_ingest
-                '105, 19',  # geotiff2cog
+                '105, 31',  # geotiff2cog
+                '112, 19',  # timeseriesdb-ingest
                 '102, 29',  # load-geo-server
                 '110, 20',  # collab-data-sync
-                '103, 21'  # final-staging
+                '103, 21'   # final-staging
                 ],
             'HECRAS': [
                 '201, 21',  # load geo server step
