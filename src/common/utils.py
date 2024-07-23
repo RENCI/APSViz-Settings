@@ -29,7 +29,7 @@ class GenUtils:
 
     # declare the component job type image name
     job_type_to_image_name: dict = {'adcirc2cog-tiff-job': '/adcirc2cog:', 'adcirctime-to-cog-job': '/adcirctime2cogs:',
-                                    'adcirc-to-kalpana-cog-job': '/adcirc-to-kalpana-cog-job:', 'ast-run-harvester-job': '/ast_run_harvester:',
+                                    'adcirc-to-kalpana-cog-job': '/kalpana:', 'ast-run-harvester-job': '/ast_run_harvester:',
                                     'collab-data-sync-job': '/apsviz-collab-sync:', 'final-staging-job': '/stagedata:',
                                     'geotiff2cog-job': '/adcirc2cog:', 'hazus': '/adras:', 'load-geo-server-job': '/load_geoserver:',
                                     'load-geo-server-s3-job': '/load_geoserver:', 'obs-mod-ast-job': '/ast_supp:', 'staging': '/stagedata:',
