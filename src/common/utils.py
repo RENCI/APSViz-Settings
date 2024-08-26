@@ -25,7 +25,8 @@ class GenUtils:
 
     """
     # declare the two potential image repos
-    image_repo_to_repo_name: dict = {'renciorg': 'renciorg', 'containers.renci.org': 'containers.renci.org/eds'}
+    image_repo_to_repo_name: dict = {'renciorg': 'renciorg', 'containers.renci.org': 'containers.renci.org/eds',
+                                     '732457422609.dkr.ecr.us-east-2.amazonaws.com': '732457422609.dkr.ecr.us-east-2.amazonaws.com'}
 
     # declare the component job type image name
     job_type_to_image_name: dict = {'adcirc2cog-tiff-job': '/adcirc2cog:', 'adcirctime-to-cog-job': '/adcirctime2cogs:',
